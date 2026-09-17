@@ -1,6 +1,6 @@
 # INVENTA.AI 🧠 — El Cerebro de Compras para tu Empresa
 
-[![CI + Deploy Gate](https://github.com/inventa-ai/inventa-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/inventa-ai/inventa-ai/actions)
+[![CI + Deploy Gate](https://github.com/Juzakito/inventa-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Juzakito/inventa-ai/actions)
 [![Vercel](https://img.shields.io/badge/deploy-Vercel-black?logo=vercel)](https://inventa.ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -9,7 +9,7 @@
 
 **Producción:** https://inventa.ai · **Demo 60s:** landing → "Ver Simulación en vivo" → dashboard + Copilot + 6 módulos.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/inventa-ai/inventa-ai&root-directory=web)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Juzakito/inventa-ai&root-directory=web)
 
 ## Estructura
 
