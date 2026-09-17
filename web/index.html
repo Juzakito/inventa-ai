@@ -204,7 +204,7 @@
       <div class="cols2">
         <div class="panel"><h3>🔮 Forecast de demanda · 30 días</h3><p class="sub2">Aceite Primor + Coca-Cola + Leche Gloria · confianza 94%</p>
           <div class="tabs" id="fc-tabs"><button class="tab on" data-h="30">30d</button><button class="tab" data-h="60">60d</button><button class="tab" data-h="90">90d</button><button class="tab" data-h="180">180d</button></div>
-          <canvas class="chart" id="ch-forecast"></canvas></div>
+          <div class="chart-box"><canvas id="ch-forecast"></canvas></div></div>
         <div class="panel"><h3>✦ IA Copilot</h3><p class="sub2">Pregunta en lenguaje natural. Cada respuesta viene justificada con datos.</p>
           <div class="chat" id="chat"></div>
           <div class="chips">
@@ -224,7 +224,7 @@
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">IA Predictiva 🔮</h2>
       <p class="muted" style="margin:0 0 18px">Kernel: media móvil 30d × tendencia × estacionalidad (finde + quincena) · mismo motor en <span class="mono">ai-engine/forecast.py</span></p>
       <div class="panel"><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"><select id="fc-sku" class="chip" style="padding:9px 14px"></select><div class="tabs" style="margin:0" id="fc-tabs2"><button class="tab on" data-h="30">30d</button><button class="tab" data-h="60">60d</button><button class="tab" data-h="90">90d</button><button class="tab" data-h="180">180d</button></div></div>
-      <canvas class="chart" id="ch-fc2" style="height:300px!important"></canvas>
+      <div class="chart-box tall"><canvas id="ch-fc2"></canvas></div>
       <div id="fc-explain" style="margin-top:14px;font-size:14px;line-height:1.65"></div></div>
     </div>
 
@@ -264,8 +264,8 @@
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">Analytics ejecutivo 📊</h2>
       <p class="muted" style="margin:0 0 18px">GMROI · Fill Rate · Sell-Through · OTIF · Nivel de servicio</p>
       <div class="kpi-grid" id="ana-kpis"></div>
-      <div class="cols2"><div class="panel"><h3>Ventas vs forecast (180d)</h3><canvas class="chart" id="ch-ana1"></canvas></div>
-      <div class="panel"><h3>Mix ABC por valor</h3><canvas class="chart" id="ch-ana2"></canvas></div></div>
+      <div class="cols2"><div class="panel"><h3>Ventas vs forecast (180d)</h3><div class="chart-box"><canvas id="ch-ana1"></canvas></div></div>
+      <div class="panel"><h3>Mix ABC por valor</h3><div class="chart-box"><canvas id="ch-ana2"></canvas></div></div></div>
     </div>
 
     <!-- INTEGRATIONS -->

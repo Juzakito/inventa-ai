@@ -3,6 +3,22 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 let CH = {};
+// Defaults Chart.js: el canvas vive en .chart-box con altura fija → sin aspect ratio,
+// con padding para que ni el eje Y ni la leyenda se recorten.
+function chartBase() {
+  const dark = document.documentElement.dataset.theme === "dark";
+  const tick = dark ? "#93A0BC" : "#5B6478";
+  return {
+    responsive: true, maintainAspectRatio: false,
+    layout: { padding: { top: 10, right: 8 } },
+    interaction: { mode: "index", intersect: false },
+    plugins: { legend: { position: "top", align: "end", labels: { color: dark ? "#EDF1FF" : "#0B1023", usePointStyle: true, boxWidth: 6, boxHeight: 6, padding: 16, font: { size: 12 } } },
+      tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}u` } } },
+    scales: {
+      x: { grid: { color: dark ? "rgba(255,255,255,.06)" : "rgba(11,16,35,.06)" }, ticks: { maxTicksLimit: 8, color: tick, font: { size: 11 }, maxRotation: 0 } },
+      y: { grid: { color: dark ? "rgba(255,255,255,.06)" : "rgba(11,16,35,.06)" }, ticks: { color: tick, font: { size: 11 }, maxTicksLimit: 6 }, grace: "8%" } }
+  };
+}
 function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2800); }
 function toggleTheme() { const h = document.documentElement; h.dataset.theme = h.dataset.theme === "dark" ? "light" : "dark"; }
 function enterApp(p) { $("#view-landing").style.display = "none"; $("#view-app").style.display = "block"; window.scrollTo(0, 0); if (p) go(p); runAutomations(false); }
@@ -66,12 +82,11 @@ function drawForecast(canvas, sku, h) {
   const fc = forecastFor(sku, h);
   const labels = [...hist.map(x => x.date.slice(5)), ...fc.map(x => x.date.slice(5))];
   if (CH[canvas]) CH[canvas].destroy();
-  const dark = document.documentElement.dataset.theme === "dark";
   CH[canvas] = new Chart(document.getElementById(canvas), { type: "line",
     data: { labels, datasets: [
-      { label: "Histórico", data: [...hist.map(x => x.qty), ...Array(fc.length).fill(null)], borderColor: "#93A0BC", borderDash: [5, 5], pointRadius: 0, tension: .35 },
-      { label: "Forecast IA", data: [...Array(hist.length - 1).fill(null), hist[hist.length - 1].qty, ...fc.map(x => x.qty)], borderColor: "#1B3BFF", backgroundColor: "rgba(27,59,255,.12)", fill: true, pointRadius: 0, tension: .35, borderWidth: 2.5 }] },
-    options: { plugins: { legend: { labels: { color: dark ? "#EDF1FF" : "#0B1023", boxWidth: 12 } } }, scales: { x: { ticks: { maxTicksLimit: 8, color: dark ? "#93A0BC" : "#5B6478" } }, y: { ticks: { color: dark ? "#93A0BC" : "#5B6478" } } } } });
+      { label: "Histórico", data: [...hist.map(x => x.qty), ...Array(fc.length).fill(null)], borderColor: "#93A0BC", borderDash: [5, 5], pointRadius: 0, pointStyle: "line", tension: .35 },
+      { label: "Forecast IA", data: [...Array(hist.length - 1).fill(null), hist[hist.length - 1].qty, ...fc.map(x => x.qty)], borderColor: "#1B3BFF", backgroundColor: "rgba(27,59,255,.12)", fill: true, pointRadius: 0, pointStyle: "line", tension: .35, borderWidth: 2.5 }] },
+    options: chartBase() });
 }
 drawForecast("ch-forecast", SKUS[0], 30);
 $$("#fc-tabs .tab").forEach(t => t.onclick = () => { $$("#fc-tabs .tab").forEach(x => x.classList.remove("on")); t.classList.add("on"); H = +t.dataset.h; drawForecast("ch-forecast", SKUS[0], H); });
@@ -297,9 +312,10 @@ function drawAnalytics() {
   renderAnaKpis();
   if (CH.ana1) { CH.ana1.update(); CH.ana2.update(); return; }
   const h = historyFor(SKUS[0], 90); const f = forecastFor(SKUS[0], 30);
-  const dark = document.documentElement.dataset.theme === "dark";
-  CH.ana1 = new Chart($("#ch-ana1"), { type: "bar", data: { labels: h.slice(-30).map(x => x.date.slice(5)), datasets: [{ label: "Ventas reales", data: h.slice(-30).map(x => x.qty), backgroundColor: "rgba(27,59,255,.75)", borderRadius: 4 }, { label: "Forecast", data: [...Array(23).fill(null), ...f.slice(0, 7).map(x => x.qty)], type: "line", borderColor: "#00C2FF", pointRadius: 0, tension: .4 }] }, options: { plugins: { legend: { labels: { color: dark ? "#EDF1FF" : "#0B1023", boxWidth: 12 } } } } });
-  CH.ana2 = new Chart($("#ch-ana2"), { type: "doughnut", data: { labels: ["Clase A (80% valor)", "Clase B (15%)", "Clase C (5%)"], datasets: [{ data: [80, 15, 5], backgroundColor: ["#1B3BFF", "#7C5CFF", "#00C2FF"], borderWidth: 0 }] }, options: { plugins: { legend: { position: "bottom", labels: { color: dark ? "#EDF1FF" : "#0B1023", boxWidth: 12 } } } } });
+  const o1 = chartBase(); o1.scales.x.ticks.maxTicksLimit = 10;
+  CH.ana1 = new Chart($("#ch-ana1"), { type: "bar", data: { labels: h.slice(-30).map(x => x.date.slice(5)), datasets: [{ label: "Ventas reales", data: h.slice(-30).map(x => x.qty), backgroundColor: "rgba(27,59,255,.75)", borderRadius: 4 }, { label: "Forecast", data: [...Array(23).fill(null), ...f.slice(0, 7).map(x => x.qty)], type: "line", borderColor: "#00C2FF", pointRadius: 0, tension: .4 }] }, options: o1 });
+  const o2 = chartBase(); delete o2.scales; o2.plugins.legend.position = "bottom"; o2.plugins.legend.align = "center";
+  CH.ana2 = new Chart($("#ch-ana2"), { type: "doughnut", data: { labels: ["Clase A (80% valor)", "Clase B (15%)", "Clase C (5%)"], datasets: [{ data: [80, 15, 5], backgroundColor: ["#1B3BFF", "#7C5CFF", "#00C2FF"], borderWidth: 0 }] }, options: o2 });
 }
 
 /* ---------- Integraciones ---------- */
