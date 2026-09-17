@@ -4,15 +4,31 @@
 const PEN = (n) => "S/ " + Number(n).toLocaleString("es-PE", { maximumFractionDigits: 0 });
 
 const SUPPLIERS = {
-  ALICORP: { name: "Alicorp", leadTime: 4, rating: 4.8, discount: "2% x pronto pago" },
-  GLORIA: { name: "Gloria", leadTime: 3, rating: 4.7, discount: "3% vol > 500u" },
-  BACKUS: { name: "Backus AB InBev", leadTime: 2, rating: 4.9, discount: "Flete gratis" },
-  MOLITALIA: { name: "Molitalia", leadTime: 5, rating: 4.5, discount: "5% campaña" },
-  KIMBERLY: { name: "Kimberly-Clark", leadTime: 6, rating: 4.6, discount: "—" },
-  UNACEM: { name: "UNACEM (Cemento Sol)", leadTime: 3, rating: 4.8, discount: "2.5% vol" },
-  COCA: { name: "Coca-Cola", leadTime: 2, rating: 4.9, discount: "Rebate 1.5%" },
-  NESTLE: { name: "Nestlé Perú", leadTime: 5, rating: 4.7, discount: "—" },
+  ALICORP: { name: "Alicorp", leadTime: 4, rating: 4.8, discount: "2% x pronto pago", contact: "Key Account — Lima", email: "atencion.clientes@alicorp.com.pe", wa: "5113150800" },
+  GLORIA: { name: "Gloria", leadTime: 3, rating: 4.7, discount: "3% vol > 500u", contact: "Ventas canal tradicional", email: "ventas@gloria.com.pe", wa: "5114584444" },
+  BACKUS: { name: "Backus AB InBev", leadTime: 2, rating: 4.9, discount: "Flete gratis", contact: "Distribuidores", email: "distribuidores@backus.com.pe", wa: "5113113000" },
+  MOLITALIA: { name: "Molitalia", leadTime: 5, rating: 4.5, discount: "5% campaña", contact: "Canal mayorista", email: "mayoristas@molitalia.com.pe", wa: "5114514040" },
+  KIMBERLY: { name: "Kimberly-Clark", leadTime: 6, rating: 4.6, discount: "—", contact: "Cuentas clave", email: "contacto@kimberly.com.pe", wa: "5114411000" },
+  UNACEM: { name: "UNACEM (Cemento Sol)", leadTime: 3, rating: 4.8, discount: "2.5% vol", contact: "Ferreterías", email: "ferreterias@unacem.com.pe", wa: "5114111111" },
+  COCA: { name: "Coca-Cola", leadTime: 2, rating: 4.9, discount: "Rebate 1.5%", contact: "Embotelladora", email: "pedidos@coca-cola.com.pe", wa: "5114222222" },
+  NESTLE: { name: "Nestlé Perú", leadTime: 5, rating: 4.7, discount: "—", contact: "Canal tradicional", email: "ventas@nestle.com.pe", wa: "5114333333" },
 };
+
+// Scorecard de proveedor calculado 100% desde el estado del sistema:
+// spend = OCs registradas + inversión sugerida por el motor; riesgo = críticos + lead time.
+// Fórmula visible en la UI: score = 0.4·rating/5 + 0.3·(1 - críticos/total) + 0.3·(1 - lead/7)
+function supplierScore(key) {
+  const skus = SKUS.filter(s => s.supplier === key);
+  const reps = skus.map(s => ({ s, r: replenishment(s, 30) }));
+  const crit = reps.filter(x => ["critical", "risk"].includes(x.r.status)).length;
+  const sup = SUPPLIERS[key];
+  const spendOC = PURCHASE_ORDERS.filter(o => o.supKey === key && o.status !== "rejected").reduce((a, o) => a + o.total, 0);
+  const spendPlan = reps.reduce((a, x) => a + x.r.investment, 0);
+  const score = Math.round((0.4 * (sup.rating / 5) + 0.3 * (skus.length ? 1 - crit / skus.length : 1) + 0.3 * (1 - Math.min(sup.leadTime, 7) / 7)) * 100);
+  const risk = crit > 0 ? "En observación" : (sup.leadTime >= 5 ? "Lead time alto" : "Saludable");
+  return { key, sup, skus: skus.length, crit, spendOC, spendPlan, score, risk,
+    grade: score >= 85 ? "A" : score >= 70 ? "B" : "C" };
+}
 
 const SKUS = [
   { id: "SKU-001", name: "Aceite Primor Premium 1L", cat: "Consumo masivo", supplier: "ALICORP", price: 11.9, cost: 9.4, stock: 180, min: 400, max: 1400, lead: 4, daily: 62, cv: 0.18, margin: 21, abc: "A", xyz: "X", dead: false },
@@ -91,10 +107,18 @@ const FINANCING = [
 ];
 
 let PURCHASE_ORDERS = [
-  { id: "OC-2026-184", supplier: "Alicorp", items: "Aceite Primor 1L × 750 · Arroz Costeño × 300", total: 12830, status: "pending", eta: "Viernes", ai: "Evita quiebre en 2.9 días. Margen protegido S/ 2,140." },
-  { id: "OC-2026-185", supplier: "Backus AB InBev", items: "Coca-Cola 2L × 220 · Cristal × 180", total: 22440, status: "pending", eta: "Mañana", ai: "Fin de semana + Fiestas Patrias: demanda +38%. Financia con Prestamype 4h." },
-  { id: "OC-2026-183", supplier: "Gloria", items: "Leche evaporada × 400", total: 31400, status: "approved", eta: "En tránsito", ai: "Cobertura 10.5 días → 34 días. Fill rate vuelve a 98%." },
-  { id: "OC-2026-182", supplier: "Molitalia", items: "Don Vittorio × 1,200", total: 3480, status: "received", eta: "Recibida", ai: "Lead time real 5.2d vs 5d pactado. OTIF 96%." },
+  { id: "OC-2026-184", supKey: "ALICORP", supplier: "Alicorp", items: "Aceite Primor 1L × 750 · Arroz Costeño × 300", total: 12830, status: "pending", eta: "Viernes", ai: "Evita quiebre en 2.9 días. Margen protegido S/ 2,140.", created: "2026-09-16", by: "IA Copilot", hist: [{ t: "2026-09-16 09:12", e: "Generada por IA Copilot" }] },
+  { id: "OC-2026-185", supKey: "BACKUS", supplier: "Backus AB InBev", items: "Coca-Cola 2L × 220 · Cristal × 180", total: 22440, status: "pending", eta: "Mañana", ai: "Fin de semana + campaña: demanda +38%. Financia con Prestamype 4h.", created: "2026-09-16", by: "IA Copilot", hist: [{ t: "2026-09-16 09:12", e: "Generada por IA Copilot" }] },
+  { id: "OC-2026-183", supKey: "GLORIA", supplier: "Gloria", items: "Leche evaporada × 400", total: 31400, status: "approved", eta: "En tránsito", ai: "Cobertura 10.5 días → 34 días. Fill rate vuelve a 98%.", created: "2026-09-15", by: "S. Martín", hist: [{ t: "2026-09-15 08:40", e: "Generada por IA Copilot" }, { t: "2026-09-15 14:02", e: "Aprobada por S. Martín" }] },
+  { id: "OC-2026-182", supKey: "MOLITALIA", supplier: "Molitalia", items: "Don Vittorio × 1,200", total: 3480, status: "received", eta: "Recibida", ai: "Lead time real 5.2d vs 5d pactado. OTIF 96%.", created: "2026-09-12", by: "S. Martín", hist: [{ t: "2026-09-12 10:20", e: "Generada por IA Copilot" }, { t: "2026-09-12 11:05", e: "Aprobada por S. Martín" }, { t: "2026-09-14 16:44", e: "Marcada como recibida" }] },
+];
+
+// Reglas de automatización (motor real: se ejecutan en runAutomations())
+let AUTO_RULES = [
+  { id: "R1", name: "Borrador automático de OC ante stock crítico", desc: "Si un SKU cae bajo el 60% del ROP y no tiene OC pendiente, genera un borrador.", on: true },
+  { id: "R2", name: "Alerta de quiebre al dueño", desc: "Notifica cuando la cobertura de un clase A baja del lead time.", on: true },
+  { id: "R3", name: "Congelar recompra de inventario muerto", desc: "Marca como 'no comprar 60 días' los SKU con exceso.", on: false },
+  { id: "R4", name: "Sugerir financiamiento óptimo", desc: "Si la inversión 30d supera S/ 50,000, propone la mejor oferta del marketplace.", on: true },
 ];
 
 const KPIS = { salesProj: 482600, salesDelta: 18.4, critical: 5, inventoryVal: 1240000, savings: 48600, breakRisk: 12.4, roi: 4.8, fillRate: 93.2, gmroi: 3.1, sellThrough: 71, otif: 94.6, service: 95.8 };

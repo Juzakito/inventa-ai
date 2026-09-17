@@ -14,4 +14,4 @@
 5. **Defensibilidad**: historial por SKU/tenant (data network effect) + scoring crediticio propietario + red de proveedores. Cada cliente hace más inteligente al siguiente sin filtrar datos (federated features).
 
 ## Pitch 30s (YC/Sequoia/a16z/SoftBank)
-"Las pymes LATAM pierden 12% de ventas por quiebres y tienen 20% del capital muerto en stock. INVENTA.AI es el cerebro de compras tipo Amazon: predice qué/cuándo/cuánto comprar, genera la OC y consigue el financiamiento para pagarla al vender. Garantía: S/ 5,000 de ahorro en 30 días o gratis."
+"Las pymes LATAM pierden 12% de ventas por quiebres y tienen 20% del capital muerto en stock. INVENTA.AI es el cerebro de compras con IA: predice qué/cuándo/cuánto comprar, genera la OC y consigue el financiamiento para pagarla al vender. Garantía: S/ 5,000 de ahorro en 30 días o gratis."

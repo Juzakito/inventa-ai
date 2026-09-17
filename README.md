@@ -1,4 +1,4 @@
-# INVENTA.AI 🧠 — El Cerebro de Compras de Amazon para Pymes
+# INVENTA.AI 🧠 — El Cerebro de Compras para tu Empresa
 
 [![CI + Deploy Gate](https://github.com/inventa-ai/inventa-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/inventa-ai/inventa-ai/actions)
 [![Vercel](https://img.shields.io/badge/deploy-Vercel-black?logo=vercel)](https://inventa.ai)

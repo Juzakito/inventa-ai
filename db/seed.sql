@@ -13,3 +13,11 @@ insert into skus (company_id, code, name, category, cost, price, stock, stock_mi
 insert into purchase_orders (company_id, code, total, status, ai_rationale) values
  ('11111111-1111-1111-1111-111111111111','OC-2026-184',12830,'pending','Evita quiebre en 2.9 días. Margen protegido S/ 2,140.'),
  ('11111111-1111-1111-1111-111111111111','OC-2026-185',22440,'pending','Fin de semana + campaña: demanda +38%.');
+insert into branches (company_id, name, city, is_main) values
+ ('11111111-1111-1111-1111-111111111111','Matriz Lima — La Victoria','Lima',true),
+ ('11111111-1111-1111-1111-111111111111','Sucursal Trujillo','Trujillo',false);
+insert into auto_rules (company_id, code, name, enabled) values
+ ('11111111-1111-1111-1111-111111111111','R1','Borrador automático de OC ante stock crítico',true),
+ ('11111111-1111-1111-1111-111111111111','R2','Alerta de quiebre al dueño',true),
+ ('11111111-1111-1111-1111-111111111111','R3','Congelar recompra de inventario muerto',false),
+ ('11111111-1111-1111-1111-111111111111','R4','Sugerir financiamiento óptimo',true);

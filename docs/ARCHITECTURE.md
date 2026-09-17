@@ -7,7 +7,7 @@ Todo auditable: la IA siempre cita SKU, números y modelo (`ma30-seas-v1` hoy; P
 ## Diagrama
 
 ```
-Fuentes (Shopify, ML, Woo, Falabella, Amazon, POS, Excel, Sheets)
+Fuentes (Shopify, ML, Woo, Falabella, Ripley, POS, Excel, Sheets)
   │ webhooks + ETL nocturno + sync 5min (BullMQ)
   ▼
 Postgres (particionado mensual, RLS por tenant) + Redis (caché forecast) + S3 (raw)

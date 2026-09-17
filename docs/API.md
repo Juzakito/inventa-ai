@@ -10,7 +10,12 @@ Base: `https://api.inventa.ai` · Auth: `Authorization: Bearer <JWT>` · OpenAPI
 | GET | `/replenishment?horizon=30` | ROP, safety, cobertura, sugerido, inversión, pérdida |
 | GET | `/replenishment/{sku}` | Ficha de reposición por SKU |
 | GET | `/orders` | OCs con estado |
+| POST | `/orders` `{supKey, items, total, eta}` | Crear OC (201) |
 | POST | `/orders/{id}/approve` | Aprobar (audita usuario + timestamp) |
+| POST | `/orders/{id}/reject` | Rechazar (audita) |
+| GET | `/suppliers` | Scorecards calculados (score, grade, riesgo) |
+| GET | `/alerts` | Alertas del motor (quiebres + excesos) |
+| GET | `/audit` | Últimas 50 acciones auditadas |
 | GET | `/financing?need=60000` | Ofertas rankeadas por costo total |
 | POST | `/copilot/chat` `{question}` | Respuesta con `answer/sources/actions` |
 

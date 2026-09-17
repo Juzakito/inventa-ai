@@ -20,8 +20,37 @@ create table suppliers (
   id uuid primary key default gen_random_uuid(),
   company_id uuid references companies(id) on delete cascade,
   name text not null, lead_time_days int default 4, rating numeric(2,1),
+  contact_name text, contact_email text, contact_phone text,
   created_at timestamptz default now()
 );
+-- Sucursales (reposición multisedes)
+create table branches (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid references companies(id) on delete cascade,
+  name text not null, city text, is_main boolean default false
+);
+-- Stock por sucursal (el campo skus.stock queda como consolidado)
+create table branch_stock (
+  branch_id uuid references branches(id) on delete cascade,
+  sku_id uuid references skus(id) on delete cascade,
+  qty int default 0, updated_at timestamptz default now(),
+  primary key (branch_id, sku_id)
+);
+-- Alertas y reglas de automatización
+create table auto_rules (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid references companies(id) on delete cascade,
+  code text not null, name text not null, enabled boolean default true,
+  last_run timestamptz, unique(company_id, code)
+);
+create table alerts (
+  id bigint generated always as identity primary key,
+  company_id uuid references companies(id) on delete cascade,
+  level text not null, -- crit|warn|info
+  title text not null, detail text, link text,
+  read boolean default false, created_at timestamptz default now()
+);
+create index alerts_lookup on alerts(company_id, read, created_at desc);
 create table skus (
   id uuid primary key default gen_random_uuid(),
   company_id uuid references companies(id) on delete cascade,

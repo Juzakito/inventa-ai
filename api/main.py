@@ -33,12 +33,37 @@ FINANCING = [
     {"id": "F3", "entity": "Kubo Financiero", "type": "Fondo", "amount": 200000, "rate": 1.80, "term": 120, "quota": 52600},
 ]
 OCS: list[dict] = [
-    {"id": "OC-2026-184", "supplier": "Alicorp", "total": 12830, "status": "pending"},
-    {"id": "OC-2026-185", "supplier": "Backus AB InBev", "total": 22440, "status": "pending"},
+    {"id": "OC-2026-184", "supKey": "ALICORP", "supplier": "Alicorp", "total": 12830, "status": "pending"},
+    {"id": "OC-2026-185", "supKey": "BACKUS", "supplier": "Backus AB InBev", "total": 22440, "status": "pending"},
 ]
+SUPPLIERS = {
+    "ALICORP": {"name": "Alicorp", "lead": 4, "rating": 4.8, "email": "atencion.clientes@alicorp.com.pe"},
+    "GLORIA": {"name": "Gloria", "lead": 3, "rating": 4.7, "email": "ventas@gloria.com.pe"},
+    "BACKUS": {"name": "Backus AB InBev", "lead": 2, "rating": 4.9, "email": "distribuidores@backus.com.pe"},
+    "MOLITALIA": {"name": "Molitalia", "lead": 5, "rating": 4.5, "email": "mayoristas@molitalia.com.pe"},
+}
+AUDIT: list[dict] = []
+
+def supplier_score(key: str) -> dict:
+    sup = SUPPLIERS[key]
+    # Mapeo realista por prefijo de catálogo demo:
+    mapping = {"ALICORP": ["SKU-001", "SKU-002"], "GLORIA": ["SKU-003"], "BACKUS": ["SKU-005", "SKU-006"], "MOLITALIA": ["SKU-004"]}
+    reps = [replenish(CATALOG[i], 30) for i in mapping.get(key, []) if i in CATALOG]
+    crit = sum(1 for r in reps if r["status"] in ("critical", "risk"))
+    spend = sum(o["total"] for o in OCS if o.get("supKey") == key and o["status"] != "rejected")
+    score = round((0.4 * sup["rating"] / 5 + 0.3 * (1 - crit / max(len(reps), 1)) + 0.3 * (1 - min(sup["lead"], 7) / 7)) * 100)
+    return {"key": key, **sup, "skus": len(reps), "critical": crit, "spend_oc": spend,
+            "score": score, "grade": "A" if score >= 85 else "B" if score >= 70 else "C",
+            "risk": "En observación" if crit else ("Lead time alto" if sup["lead"] >= 5 else "Saludable")}
 
 class ChatIn(BaseModel):
     question: str
+
+class CreateOC(BaseModel):
+    supKey: str
+    items: str
+    total: float
+    eta: str = "Por definir"
 
 @app.get("/health")
 def health(): return {"ok": True, "service": "inventa-ai", "version": "1.0.0"}
@@ -66,11 +91,42 @@ def one_replenishment(sku_id: str, horizon: int = 30):
 @app.get("/orders")
 def orders(): return OCS
 
+@app.post("/orders", status_code=201)
+def create_order(body: CreateOC):
+    if body.supKey not in SUPPLIERS: raise HTTPException(400, "Proveedor inválido")
+    oc = {"id": f"OC-2026-{186 + len(OCS)}", "supKey": body.supKey,
+          "supplier": SUPPLIERS[body.supKey]["name"], "items": body.items,
+          "total": body.total, "eta": body.eta, "status": "pending"}
+    OCS.insert(0, oc); AUDIT.append({"action": "create", "id": oc["id"]}); return oc
+
 @app.post("/orders/{oc_id}/approve")
 def approve(oc_id: str):
     for o in OCS:
-        if o["id"] == oc_id: o["status"] = "approved"; return o
+        if o["id"] == oc_id: o["status"] = "approved"; AUDIT.append({"action": "approve", "id": oc_id}); return o
     raise HTTPException(404, "OC no encontrada")
+
+@app.post("/orders/{oc_id}/reject")
+def reject(oc_id: str):
+    for o in OCS:
+        if o["id"] == oc_id: o["status"] = "rejected"; AUDIT.append({"action": "reject", "id": oc_id}); return o
+    raise HTTPException(404, "OC no encontrada")
+
+@app.get("/suppliers")
+def suppliers(): return [supplier_score(k) for k in SUPPLIERS]
+
+@app.get("/alerts")
+def alerts():
+    out = []
+    for s in CATALOG.values():
+        r = replenish(s, 30)
+        if r["status"] in ("critical", "risk"):
+            out.append({"level": "crit", "title": f"Quiebre: {s.name}", "detail": f"Cobertura {r['days_cover']}d · pide {r['suggested_qty']}u"})
+        elif r["status"] == "excess":
+            out.append({"level": "warn", "title": f"Exceso: {s.name}", "detail": "Congela recompra"})
+    return out
+
+@app.get("/audit")
+def get_audit(): return AUDIT[-50:]
 
 @app.get("/financing")
 def financing(need: float = 60000):

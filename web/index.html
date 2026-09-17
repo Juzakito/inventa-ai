@@ -2,7 +2,7 @@
 <html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>INVENTA.AI — El Cerebro de Compras de Amazon para tu Empresa</title>
+<title>INVENTA.AI — El Cerebro de Compras para tu Empresa</title>
 <meta name="description" content="Predice demanda, evita quiebres de stock y consigue financiamiento inteligente en una sola plataforma.">
 <link rel="canonical" href="https://inventa.ai/">
 <meta name="theme-color" content="#1B3BFF">
@@ -10,7 +10,7 @@
 <link rel="manifest" href="/manifest.json">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="INVENTA.AI">
-<meta property="og:title" content="INVENTA.AI — El Cerebro de Compras de Amazon para tu Empresa">
+<meta property="og:title" content="INVENTA.AI — El Cerebro de Compras para tu Empresa">
 <meta property="og:description" content="Predice demanda, evita quiebres de stock y consigue financiamiento inteligente en una sola plataforma.">
 <meta property="og:url" content="https://inventa.ai/">
 <meta property="og:image" content="https://inventa.ai/og-cover.png">
@@ -33,20 +33,20 @@
 <div id="view-landing">
 <nav class="nav"><div class="wrap nav-in">
   <div class="logo"><div class="logo-mark">I</div>INVENTA.AI</div>
-  <div class="nav-links"><a href="#producto">Producto</a><a href="#modulos">Módulos</a><a href="#financiamiento">Financiamiento</a><a href="#precios">Precios</a></div>
+  <div class="nav-links"><a href="#producto">Producto</a><a href="#modulos">Módulos</a><a href="#casos">Casos de uso</a><a href="#roi">ROI</a><a href="#faq">FAQ</a></div>
   <div class="nav-cta">
     <button class="icon-btn" onclick="toggleTheme()" title="Claro / oscuro">◐</button>
     <button class="btn btn-g" onclick="enterApp()">Iniciar sesión</button>
-    <button class="btn btn-b" onclick="enterApp()">Solicitar Demo →</button>
+    <button class="btn btn-b" onclick="openDemo()">Solicitar Demo →</button>
   </div>
 </div></nav>
 
 <header class="hero wrap">
   <span class="pill"><span class="dot"></span> Nuevo · Motor predictivo 180 días + financiamiento integrado</span>
-  <h1>El <span class="grad">Cerebro de Compras</span><br>de Amazon para tu Empresa</h1>
-  <p class="sub">Predice demanda, evita quiebres de stock y consigue financiamiento inteligente en una sola plataforma. Te decimos <b>qué comprar, cuándo, cuánto y a quién</b> — y te conseguimos el capital para hacerlo.</p>
+  <h1>El <span class="grad">Cerebro de Compras</span><br>para tu Empresa</h1>
+  <p class="sub">Transforma datos en decisiones inteligentes. Anticipa la demanda, evita quiebres de stock y optimiza cada compra con <b>inteligencia artificial</b>.</p>
   <div class="hero-cta">
-    <button class="btn btn-b" style="padding:15px 30px;font-size:16px" onclick="enterApp()">Solicitar Demo →</button>
+    <button class="btn btn-b" style="padding:15px 30px;font-size:16px" onclick="openDemo()">Solicitar Demo →</button>
     <button class="btn btn-g" style="padding:15px 30px;font-size:16px" onclick="enterApp('dashboard')">▶ Ver Simulación en vivo</button>
   </div>
   <div class="trust"><span>✓ Onboarding en 1 día</span><span>✓ S/ 5,000 de ahorro en 30 días o no pagas</span><span>✓ Sin ERP legacy</span><span>✓ Shopify · Mercado Libre · Excel</span></div>
@@ -97,6 +97,55 @@
   </div>
 </section>
 
+<section class="sec wrap" id="casos" style="padding-top:0">
+  <h2>Diseñado para tu <span style="color:var(--primary)">rubro</span></h2>
+  <p>El mismo cerebro, calibrado con la estacionalidad y los proveedores de cada vertical.</p>
+  <div class="grid3">
+    <div class="card"><div class="ic">🏬</div><h3>Retail y cadenas regionales</h3><p>Forecast por tienda y reposición multisedes. Fill rate de 93% → 98% en 90 días, sin aumentar capital de trabajo.</p><p class="muted" style="margin-top:10px;font-size:13px">✓ Reposición por sucursal · ✓ Temporadas y campañas</p></div>
+    <div class="card"><div class="ic">🚚</div><h3>Distribuidores y mayoristas</h3><p>Detén el sangrado: detecta quiebres en clase A y congela el inventario muerto. Ahorro típico: S/ 5,000/mes desde el primer mes.</p><p class="muted" style="margin-top:10px;font-size:13px">✓ OCs a Alicorp/Backus/Gloria · ✓ Financiamiento 90d</p></div>
+    <div class="card"><div class="ic">🛒</div><h3>E-commerce y marketplaces</h3><p>Sincroniza Shopify y Mercado Libre: vende sin quiebres en quincena y finde, cuando la demanda sube +28%.</p><p class="muted" style="margin-top:10px;font-size:13px">✓ Sync cada 5 min · ✓ Alertas WhatsApp</p></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="roi" style="padding-top:0">
+  <h2>Calcula tu <span style="color:var(--primary)">retorno</span></h2>
+  <p>Mueve los valores. El cálculo usa las mismas tasas promedio de nuestros pilotos (quiebre 12%, muerto 20%).</p>
+  <div class="panel" style="max-width:760px;margin:0 auto">
+    <div class="frow">
+      <div class="field"><label>Ventas mensuales (S/)</label><input type="number" id="roi-sales" value="300000" min="10000" oninput="calcROI()"></div>
+      <div class="field"><label>Capital en inventario (S/)</label><input type="number" id="roi-inv" value="800000" min="10000" oninput="calcROI()"></div>
+    </div>
+    <div class="roi-out">
+      <div><small class="muted" style="font-size:11px;font-weight:800">VENTAS RECUPERADAS/AÑO</small><b class="mono" id="roi-a">—</b></div>
+      <div><small class="muted" style="font-size:11px;font-weight:800">CAPITAL LIBERADO</small><b class="mono" id="roi-b">—</b></div>
+      <div><small class="muted" style="font-size:11px;font-weight:800">ROI DEL PLAN GROWTH</small><b class="mono" id="roi-c">—</b></div>
+    </div>
+    <div style="text-align:center;margin-top:18px"><button class="btn btn-b" onclick="openDemo()">Quiero estos números →</button></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="testimonios" style="padding-top:0">
+  <h2>Empresas piloto, <span style="color:var(--primary)">resultados reales</span></h2>
+  <p>Programa piloto 2026 · Lima. Métricas auditadas contra sus ERPs.</p>
+  <div class="grid3">
+    <div class="card"><p style="font-size:15px;color:var(--ink)">“Pasamos de calcular pedidos en Excel los domingos a aprobar OCs desde WhatsApp. Cero quiebres en Aceite en 60 días.”</p><p class="muted" style="margin-top:12px">— <b>Distribuidora San Martín</b>, Lima · Mayorista · <b class="up">+S/ 48,600 ahorrados</b></p></div>
+    <div class="card"><p style="font-size:15px;color:var(--ink)">“El Copilot encontró S/ 96,000 muertos en tres SKUs que seguíamos comprando por inercia. El banco nos financió con ese mismo reporte.”</p><p class="muted" style="margin-top:12px">— <b>Comercial Ferretera del Norte</b>, Trujillo · Ferretería · <b class="up">Fill rate 98%</b></p></div>
+    <div class="card"><p style="font-size:15px;color:var(--ink)">“Integramos Shopify en una tarde. La primera quincena con forecast vendimos +18% sin sobrestock.”</p><p class="muted" style="margin-top:12px">— <b>Tienda Andina Online</b>, Arequipa · E-commerce · <b class="up">ROI 4.8×</b></p></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="faq" style="padding-top:0">
+  <h2>Preguntas <span style="color:var(--primary)">frecuentes</span></h2>
+  <p>Lo que todo dueño de pyme pregunta antes de su demo.</p>
+  <div style="max-width:720px;margin:0 auto" id="faq-list">
+    <div class="faq"><button onclick="this.parentNode.classList.toggle('open')">¿Necesito cambiar mi ERP o mi forma de trabajar? <span>+</span></button><div class="a">No. INVENTA.AI lee tus ventas desde Excel, Shopify, Mercado Libre o tu POS y genera las órdenes listas para aprobar. Tu equipo sigue comprando a los mismos proveedores.</div></div>
+    <div class="faq"><button onclick="this.parentNode.classList.toggle('open')">¿Cómo funciona la garantía de S/ 5,000? <span>+</span></button><div class="a">Medimos tu ahorro (ventas recuperadas + capital liberado) a 30 días contra tu ERP. Si no llega a S/ 5,000, no pagas la suscripción. Simple.</div></div>
+    <div class="faq"><button onclick="this.parentNode.classList.toggle('open')">¿La IA decide sola qué comprar? <span>+</span></button><div class="a">No. La IA propone con números y justificación; tú apruebas en 1 clic (o por WhatsApp). Cada decisión queda en el historial de auditoría.</div></div>
+    <div class="faq"><button onclick="this.parentNode.classList.toggle('open')">¿Cómo accedo al financiamiento? <span>+</span></button><div class="a">Tu historial de ventas verificado es tu garantía. El marketplace compara bancos, fintechs y fondos y te pre-aprueba la mejor oferta para cada plan de compras.</div></div>
+    <div class="faq"><button onclick="this.parentNode.classList.toggle('open')">¿Mis datos están seguros? <span>+</span></button><div class="a">Cifrado AES-256, TLS 1.3, roles por usuario y aislamiento total por empresa. Tus datos nunca entrenan modelos de terceros.</div></div>
+  </div>
+</section>
+
 <section class="sec wrap" id="precios" style="padding-top:0">
   <h2>Precios que se pagan solos</h2>
   <p>Suscripción + comisión por éxito + fees de financiamiento compartidos. Si no ahorras, no pagas.</p>
@@ -122,20 +171,30 @@
     <button class="mi" data-p="financing">💳 Financiamiento</button>
     <div class="sec-t">Operación</div>
     <button class="mi" data-p="inventory">📦 Inventario</button>
+    <button class="mi" data-p="suppliers">🏭 Proveedores</button>
     <button class="mi" data-p="analytics">📊 Analytics</button>
     <button class="mi" data-p="integrations">🔌 Integraciones</button>
+    <button class="mi" data-p="auto">🤖 Automatización</button>
     <div class="sec-t">Cuenta</div>
+    <button class="mi" data-p="settings">⚙️ Ajustes</button>
     <button class="mi" onclick="exitApp()">← Volver al sitio</button>
     <button class="mi" onclick="toggleTheme()">◐ Claro / oscuro</button>
     <div class="panel" style="margin-top:14px;padding:14px"><b style="font-size:13px">✦ Copilot IA</b><p class="muted" style="font-size:12.5px;margin:6px 0 10px">Tienes 3 alertas críticas sin leer.</p><button class="btn btn-b btn-s" onclick="go('dashboard');setTimeout(()=>document.getElementById('chat-in').focus(),300)">Preguntar →</button></div>
   </aside>
   <div class="main">
     <div class="topbar">
+      <button class="icon-btn" id="menu-btn" onclick="document.querySelector('.side').classList.add('open');document.getElementById('scrim').classList.add('on')">☰</button>
       <div class="search">⌕ &nbsp;Buscar SKU, proveedor, OC… <span class="badge b-info" style="margin-left:auto">EN VIVO</span></div>
+      <div class="bell-wrap"><button class="icon-btn" onclick="document.getElementById('alert-drop').classList.toggle('open')" title="Alertas">🔔</button><span class="bell-n" id="bell-n">0</span>
+        <div class="alert-drop" id="alert-drop"></div></div>
+      <select id="role-sel" class="chip" style="padding:9px 12px" onchange="setRole(this.value)" title="Rol (controla permisos)">
+        <option value="owner">👑 Dueño</option><option value="buyer">🧾 Comprador</option><option value="viewer">👁️ Lector</option>
+      </select>
       <button class="icon-btn" onclick="toggleTheme()">◐</button>
       <button class="btn btn-g btn-s" onclick="toast('📄 Reporte ejecutivo exportado a PDF')">Exportar</button>
       <div class="avatar">SM</div>
     </div>
+    <div class="scrim" id="scrim" onclick="document.querySelector('.side').classList.remove('open');this.classList.remove('on')"></div>
 
     <!-- DASHBOARD -->
     <div class="page on" id="p-dashboard">
@@ -173,13 +232,13 @@
     <div class="page" id="p-replenishment">
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">Motor de reabastecimiento ⚡</h2>
       <p class="muted" style="margin:0 0 18px">ROP · Safety stock (95%) · Cobertura en días · Inversión requerida · Pérdida evitada</p>
-      <div class="panel"><table><thead><tr><th>SKU</th><th>Stock</th><th>ROP</th><th>Safety</th><th>Cobertura</th><th>Sugerido</th><th>Inversión</th><th>Estado</th><th></th></tr></thead><tbody id="rep-body"></tbody></table></div>
+      <div class="panel"><div class="tscroll"><table><thead><tr><th>SKU</th><th>Stock</th><th>ROP</th><th>Safety</th><th>Cobertura</th><th>Sugerido</th><th>Inversión</th><th>Estado</th><th></th></tr></thead><tbody id="rep-body"></tbody></table></div></div>
     </div>
 
     <!-- ORDERS -->
     <div class="page" id="p-orders">
-      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Órdenes de compra 🧾</h2>
-      <p class="muted" style="margin:0 0 18px">Generadas por IA · aprueba en 1 clic · se envían por WhatsApp + Email + PDF</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px"><h2 style="margin:0;letter-spacing:-.03em">Órdenes de compra 🧾</h2><button class="btn btn-b btn-s" style="margin-left:auto" onclick="openOCModal()">+ Nueva OC</button></div>
+      <p class="muted" style="margin:0 0 18px">Creadas por ti o por la IA · aprueba en 1 clic · PDF, email y WhatsApp reales</p>
       <div id="oc-list"></div>
     </div>
 
@@ -197,7 +256,7 @@
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">Inventario en tiempo real 📦</h2>
       <p class="muted" style="margin:0 0 18px">ABC × XYZ · rotación · margen · dinero inmovilizado</p>
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)" id="inv-kpis"></div>
-      <div class="panel"><table><thead><tr><th>SKU</th><th>Categoría</th><th>Stock</th><th>Valorizado</th><th>ABC</th><th>XYZ</th><th>Margen</th><th>Diagnóstico</th></tr></thead><tbody id="inv-body"></tbody></table></div>
+      <div class="panel"><div class="tscroll"><table><thead><tr><th>SKU</th><th>Categoría</th><th>Stock</th><th>Valorizado</th><th>ABC</th><th>XYZ</th><th>Margen</th><th>Diagnóstico</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
     </div>
 
     <!-- ANALYTICS -->
@@ -218,11 +277,67 @@
       <div style="border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--muted);cursor:pointer" onclick="toast('✓ Archivo ventas_2026.xlsx procesado: 14 SKUs · 180 días · forecast listo')">⬆ Arrastra <b>ventas_2026.xlsx</b> aquí o <u>haz clic para simular carga</u></div></div>
     </div>
 
+    <!-- SUPPLIERS -->
+    <div class="page" id="p-suppliers">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Proveedores 🏭</h2>
+      <p class="muted" style="margin:0 0 18px">Scorecards calculados desde tus OCs y tu inventario · fórmula: 40% rating + 30% salud de SKUs + 30% lead time</p>
+      <div class="grid2" id="sup-grid"></div>
+    </div>
+
+    <!-- AUTOMATION -->
+    <div class="page" id="p-auto">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Automatización 🤖</h2>
+      <p class="muted" style="margin:0 0 18px">Reglas que se ejecutan de verdad: cada cambio corre el motor y deja rastro en auditoría</p>
+      <div class="panel"><h3>Reglas activas</h3><p class="sub2">Última ejecución: <b id="auto-last">—</b></p><div id="rule-list"></div>
+      <button class="btn btn-b btn-s" onclick="runAutomations(true)">▶ Ejecutar ahora</button></div>
+      <div class="panel" style="margin-top:14px"><h3>🔔 Centro de alertas</h3><p class="sub2">Generadas por el motor y las reglas, no escritas a mano</p><div id="alert-list"></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="p-settings">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Ajustes ⚙️</h2>
+      <p class="muted" style="margin:0 0 18px">Roles, seguridad y trazabilidad empresarial</p>
+      <div class="grid2">
+        <div class="panel"><h3>👤 Rol y permisos</h3><p class="sub2">El rol restringe acciones reales en esta sesión (el backend lo refuerza con JWT).</p>
+          <div class="field"><label>Rol activo</label><select id="role-sel2" onchange="setRole(this.value)"><option value="owner">👑 Dueño — todo permitido</option><option value="buyer">🧾 Comprador — crea y edita, no aprueba</option><option value="viewer">👁️ Lector — solo lectura</option></select></div>
+          <div style="font-size:13.5px" id="perm-list"></div></div>
+        <div class="panel"><h3>🔐 Seguridad</h3><p class="sub2">Doble factor para aprobar OCs mayores a S/ 10,000.</p>
+          <div class="rule" style="margin:0"><div><b>MFA (app autenticadora)</b><p id="mfa-st">Desactivado</p></div><div class="switch" id="mfa-sw" onclick="toggleMFA()"></div></div>
+          <p class="muted" style="font-size:13px;margin:12px 0 0">Sesión: SM · Lima · OAuth Google · último acceso hoy 08:59. Cifrado AES-256/TLS 1.3.</p></div>
+      </div>
+      <div class="panel" style="margin-top:14px"><h3>📜 Auditoría</h3><p class="sub2">Cada acción sensible queda registrada con usuario, rol y hora</p>
+        <div class="tscroll"><table><thead><tr><th>Hora</th><th>Usuario</th><th>Rol</th><th>Acción</th></tr></thead><tbody id="audit-body"></tbody></table></div></div>
+    </div>
+
   </div>
 </div>
 </div>
 
-<script src="data.js"></script>
+<!-- OC modal -->
+<div class="modal-bg" id="oc-modal"><div class="modal">
+  <h3 id="ocm-title">Nueva orden de compra</h3>
+  <p class="muted" style="font-size:13.5px;margin:0 0 6px">Los totales se calculan con tus costos reales.</p>
+  <div class="field"><label>Proveedor</label><select id="ocm-sup"></select></div>
+  <div class="field"><label>Líneas</label><div id="ocm-lines"></div>
+    <button class="btn btn-g btn-s" onclick="ocAddLine()">+ Agregar línea</button></div>
+  <div class="frow"><div class="field"><label>Entrega esperada</label><input id="ocm-eta" value="5 días hábiles"></div>
+  <div class="field"><label>Total estimado</label><input id="ocm-total" readonly></div></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn btn-g" onclick="closeModal('oc-modal')">Cancelar</button><button class="btn btn-b" onclick="ocSave()">Guardar OC →</button></div>
+</div></div>
+
+<!-- Demo modal -->
+<div class="modal-bg" id="demo-modal"><div class="modal">
+  <div id="demo-form">
+    <h3>Solicitar demo personalizada</h3>
+    <p class="muted" style="font-size:13.5px;margin:0 0 6px">Te mostramos tu propio forecast con tus datos en 30 minutos.</p>
+    <div class="frow"><div class="field"><label>Nombre</label><input id="dm-name" placeholder="Tu nombre"></div>
+    <div class="field"><label>Empresa</label><input id="dm-co" placeholder="Mi empresa S.A.C."></div></div>
+    <div class="frow"><div class="field"><label>Email corporativo</label><input id="dm-mail" type="email" placeholder="tu@empresa.com"></div>
+    <div class="field"><label>Rubro</label><select id="dm-biz"><option>Retail</option><option>Distribuidor / Mayorista</option><option>E-commerce</option><option>Ferretería</option><option>Consumo masivo</option></select></div></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn btn-g" onclick="closeModal('demo-modal')">Cerrar</button><button class="btn btn-b" onclick="submitDemo()">Agendar demo →</button></div>
+  </div>
+  <div id="demo-ok" style="display:none;text-align:center;padding:20px 0"><div style="font-size:48px">✅</div><h3>¡Solicitud recibida!</h3><p class="muted">Te contactaremos en menos de 24h hábiles con tu forecast de muestra.</p><button class="btn btn-b" onclick="closeModal('demo-modal');enterApp('dashboard')">Mientras tanto: ver simulación →</button></div>
+</div></div>
 <script src="app.js"></script>
 </body>
 </html>
