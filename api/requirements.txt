@@ -1,0 +1,2 @@
+# requirements: fastapi, uvicorn, pydantic
+# pip install fastapi uvicorn pydantic

@@ -1,0 +1,17 @@
+# Deps
+node_modules/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# Env / secrets — NUNCA commitear
+.env
+.env.local
+*.pem
+*.key
+# Vercel / OS / editores
+.vercel
+.DS_Store
+Thumbs.db
+*.log

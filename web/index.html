@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INVENTA.AI — El Cerebro de Compras de Amazon para tu Empresa</title>
+<meta name="description" content="Predice demanda, evita quiebres de stock y consigue financiamiento inteligente en una sola plataforma.">
+<link rel="canonical" href="https://inventa.ai/">
+<meta name="theme-color" content="#1B3BFF">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="INVENTA.AI">
+<meta property="og:title" content="INVENTA.AI — El Cerebro de Compras de Amazon para tu Empresa">
+<meta property="og:description" content="Predice demanda, evita quiebres de stock y consigue financiamiento inteligente en una sola plataforma.">
+<meta property="og:url" content="https://inventa.ai/">
+<meta property="og:image" content="https://inventa.ai/og-cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="INVENTA.AI — El Cerebro de Compras para Pymes">
+<meta name="twitter:description" content="Qué comprar, cuándo, cuánto y a quién — más el financiamiento para hacerlo.">
+<meta name="twitter:image" content="https://inventa.ai/og-cover.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"INVENTA.AI","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"500","priceCurrency":"USD"},"description":"Plataforma IA que predice demanda, automatiza órdenes de compra y financia inventario para pymes de Latinoamérica."}</script>
+<!-- Analítica (activar con IDs reales vía Vercel Env Vars + reemplazo en build):
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="vendor/chart.umd.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- ============ LANDING ============ -->
+<div id="view-landing">
+<nav class="nav"><div class="wrap nav-in">
+  <div class="logo"><div class="logo-mark">I</div>INVENTA.AI</div>
+  <div class="nav-links"><a href="#producto">Producto</a><a href="#modulos">Módulos</a><a href="#financiamiento">Financiamiento</a><a href="#precios">Precios</a></div>
+  <div class="nav-cta">
+    <button class="icon-btn" onclick="toggleTheme()" title="Claro / oscuro">◐</button>
+    <button class="btn btn-g" onclick="enterApp()">Iniciar sesión</button>
+    <button class="btn btn-b" onclick="enterApp()">Solicitar Demo →</button>
+  </div>
+</div></nav>
+
+<header class="hero wrap">
+  <span class="pill"><span class="dot"></span> Nuevo · Motor predictivo 180 días + financiamiento integrado</span>
+  <h1>El <span class="grad">Cerebro de Compras</span><br>de Amazon para tu Empresa</h1>
+  <p class="sub">Predice demanda, evita quiebres de stock y consigue financiamiento inteligente en una sola plataforma. Te decimos <b>qué comprar, cuándo, cuánto y a quién</b> — y te conseguimos el capital para hacerlo.</p>
+  <div class="hero-cta">
+    <button class="btn btn-b" style="padding:15px 30px;font-size:16px" onclick="enterApp()">Solicitar Demo →</button>
+    <button class="btn btn-g" style="padding:15px 30px;font-size:16px" onclick="enterApp('dashboard')">▶ Ver Simulación en vivo</button>
+  </div>
+  <div class="trust"><span>✓ Onboarding en 1 día</span><span>✓ S/ 5,000 de ahorro en 30 días o no pagas</span><span>✓ Sin ERP legacy</span><span>✓ Shopify · Mercado Libre · Excel</span></div>
+
+  <div class="shot" id="producto">
+    <div class="shot-bar"><i></i><i></i><i></i><span class="muted" style="font-size:12.5px;margin-left:8px">app.inventa.ai — Distribuidora San Martín · Lima</span></div>
+    <div class="shot-body">
+      <div class="shot-side">
+        <div class="mi on">◈ Resumen ejecutivo</div><div class="mi">◎ IA Predictiva</div><div class="mi">↻ Reabastecimiento</div><div class="mi">▤ Órdenes de compra</div><div class="mi">◉ Financiamiento</div><div class="mi">▦ Inventario ABC/XYZ</div>
+        <div style="margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12.5px;background:var(--card)"><b>✦ Copilot IA</b><br><span class="muted">“Compra 750u de Aceite Primor antes del viernes o perderás S/ 4,820.”</span></div>
+      </div>
+      <div class="shot-main">
+        <div class="kpis">
+          <div class="kpi"><small>Ventas proyectadas 30d</small><b class="mono">S/ 482,600</b><span class="up">▲ +18.4%</span></div>
+          <div class="kpi"><small>Stock crítico</small><b class="mono">5 SKUs</b><span class="down">● acción hoy</span></div>
+          <div class="kpi"><small>Ahorro generado</small><b class="mono">S/ 48,600</b><span class="up">ROI 4.8×</span></div>
+        </div>
+        <div class="fake-chart"><b style="font-size:14px">Forecast demanda · próximos 30 días</b> <span class="muted" style="font-size:12.5px">· confianza 94%</span>
+          <div class="bars" id="hero-bars"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="sec wrap" id="modulos">
+  <h2>Todo tu inventario, <span style="color:var(--primary)">pensando por ti</span></h2>
+  <p>Seis módulos que operan como un solo cerebro: predice, ordena, financia y mide. Sin SAP, sin Oracle, sin dolor.</p>
+  <div class="grid3">
+    <div class="card"><div class="ic">🔮</div><h3>1 · IA Predictiva</h3><p>Forecast 30/60/90/180 días con estacionalidad, campañas y comportamiento del cliente. Cada predicción viene explicada.</p></div>
+    <div class="card"><div class="ic">⚡</div><h3>2 · Reabastecimiento</h3><p>Punto de reorden, stock mín/máx, lead time y safety stock calculados solos. “Compra 750u antes del viernes.”</p></div>
+    <div class="card"><div class="ic">🧾</div><h3>3 · Órdenes de compra</h3><p>OC automáticas para aprobar en 1 clic. PDF, WhatsApp, email y ERP. Flujo aprobar → editar → programar.</p></div>
+    <div class="card"><div class="ic">💳</div><h3>4 · Financiamiento</h3><p>Marketplace con bancos, fintechs y fondos. La IA elige la mejor tasa, plazo y cuota para cada compra.</p></div>
+    <div class="card"><div class="ic">📦</div><h3>5 · Inventario vivo</h3><p>Rotación, ABC/XYZ, margen e inventario muerto en tiempo real. Descubre dónde tienes dinero inmovilizado.</p></div>
+    <div class="card"><div class="ic">📊</div><h3>6 · Analytics</h3><p>GMROI, Fill Rate, Sell-Through, OTIF y nivel de servicio en visualizaciones ejecutivas listas para directorio.</p></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="financiamiento" style="padding-top:0">
+  <h2>Compra barato hoy, <span style="color:var(--primary)">paga al vender</span></h2>
+  <p>Cero descapitalización: el financiamiento correcto, en el momento correcto, aprobado con tu propio historial de ventas.</p>
+  <div class="grid2">
+    <div class="panel"><h3>🏦 Banco Pichincha <span class="badge b-info">Recomendada por IA · 96/100</span></h3><p class="sub2">Menor costo total y calza con tu ciclo de 90 días.</p>
+      <div class="fin-grid"><div><small>Monto</small><b class="mono">S/ 120,000</b></div><div><small>Tasa men.</small><b class="mono">1.45%</b></div><div><small>Plazo</small><b class="mono">90 días</b></div><div><small>Cuota</small><b class="mono">S/ 41,200</b></div></div>
+      <button class="btn btn-b btn-s" onclick="enterApp('financiamiento')">Solicitar con 1 clic →</button></div>
+    <div class="panel"><h3>✦ Garantía de ROI</h3><p class="sub2" style="font-size:15px;line-height:1.65">“<b>S/ 5,000 de ahorro en 30 días o no pagas.</b>” Onboarding sin fricción en 1 día desde Excel, Shopify o Mercado Libre. Aprobaciones por WhatsApp.</p>
+      <div class="chips"><span class="chip">Shopify ✓</span><span class="chip">Mercado Libre ✓</span><span class="chip">WooCommerce ✓</span><span class="chip">Falabella ✓</span><span class="chip">Excel ✓</span><span class="chip">Google Sheets ✓</span></div></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="precios" style="padding-top:0">
+  <h2>Precios que se pagan solos</h2>
+  <p>Suscripción + comisión por éxito + fees de financiamiento compartidos. Si no ahorras, no pagas.</p>
+  <div class="price">
+    <div class="card"><h3>Pyme</h3><b class="mono">$500<small class="muted">/mes</small></b><p>Hasta 500 SKUs · 1 tienda · Forecast 30/60d · OC + WhatsApp</p><br><button class="btn btn-g" onclick="enterApp()">Empezar →</button></div>
+    <div class="card" style="border:2px solid var(--primary)"><h3>⚡ Growth <span class="badge b-info">Más popular</span></h3><b class="mono">$1,500<small class="muted">/mes</small></b><p>Hasta 5,000 SKUs · Multitienda · Forecast 180d · Financiamiento IA · API</p><br><button class="btn btn-b" onclick="enterApp()">Solicitar Demo →</button></div>
+    <div class="card"><h3>Enterprise</h3><b class="mono">$5,000<small class="muted">/mes</small></b><p>SKUs ilimitados · Multi-país · SLA 99.9% · Foundry fiscal · SSO/RBAC</p><br><button class="btn btn-g" onclick="enterApp()">Hablar con ventas →</button></div>
+  </div>
+</section>
+
+<footer><div class="wrap" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center"><div class="logo" style="font-size:16px"><div class="logo-mark" style="width:28px;height:28px">I</div>INVENTA.AI</div><span>© 2026 Inventa Labs · Lima · CDMX · Bogotá · Santiago</span><span style="margin-left:auto">SOC 2 · AES-256 · OAuth + MFA · RBAC</span></div></footer>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="view-app">
+<div class="app">
+  <aside class="side">
+    <div class="logo" style="padding:6px 8px 14px"><div class="logo-mark">I</div>INVENTA.AI</div>
+    <button class="mi on" data-p="dashboard">◈ Resumen</button>
+    <button class="mi" data-p="forecast">🔮 IA Predictiva</button>
+    <button class="mi" data-p="replenishment">⚡ Reabastecimiento</button>
+    <button class="mi" data-p="orders">🧾 Órdenes <span class="badge b-crit" id="oc-badge" style="margin-left:auto">2</span></button>
+    <button class="mi" data-p="financing">💳 Financiamiento</button>
+    <div class="sec-t">Operación</div>
+    <button class="mi" data-p="inventory">📦 Inventario</button>
+    <button class="mi" data-p="analytics">📊 Analytics</button>
+    <button class="mi" data-p="integrations">🔌 Integraciones</button>
+    <div class="sec-t">Cuenta</div>
+    <button class="mi" onclick="exitApp()">← Volver al sitio</button>
+    <button class="mi" onclick="toggleTheme()">◐ Claro / oscuro</button>
+    <div class="panel" style="margin-top:14px;padding:14px"><b style="font-size:13px">✦ Copilot IA</b><p class="muted" style="font-size:12.5px;margin:6px 0 10px">Tienes 3 alertas críticas sin leer.</p><button class="btn btn-b btn-s" onclick="go('dashboard');setTimeout(()=>document.getElementById('chat-in').focus(),300)">Preguntar →</button></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="search">⌕ &nbsp;Buscar SKU, proveedor, OC… <span class="badge b-info" style="margin-left:auto">EN VIVO</span></div>
+      <button class="icon-btn" onclick="toggleTheme()">◐</button>
+      <button class="btn btn-g btn-s" onclick="toast('📄 Reporte ejecutivo exportado a PDF')">Exportar</button>
+      <div class="avatar">SM</div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="p-dashboard">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Buenos días, Distribuidora San Martín ☀️</h2>
+      <p class="muted" style="margin:0 0 18px">Jueves 17 SEP 2026 · Lima · Esto es lo que tu cerebro de compras detectó hoy.</p>
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <div class="cols2">
+        <div class="panel"><h3>🔮 Forecast de demanda · 30 días</h3><p class="sub2">Aceite Primor + Coca-Cola + Leche Gloria · confianza 94%</p>
+          <div class="tabs" id="fc-tabs"><button class="tab on" data-h="30">30d</button><button class="tab" data-h="60">60d</button><button class="tab" data-h="90">90d</button><button class="tab" data-h="180">180d</button></div>
+          <canvas class="chart" id="ch-forecast"></canvas></div>
+        <div class="panel"><h3>✦ IA Copilot</h3><p class="sub2">Pregunta en lenguaje natural. Cada respuesta viene justificada con datos.</p>
+          <div class="chat" id="chat"></div>
+          <div class="chips">
+            <button class="chip" onclick="ask('¿Qué debo comprar esta semana?')">¿Qué debo comprar?</button>
+            <button class="chip" onclick="ask('¿Qué SKU corre riesgo?')">¿SKU en riesgo?</button>
+            <button class="chip" onclick="ask('¿Dónde tengo dinero inmovilizado?')">¿Dinero inmovilizado?</button>
+          </div>
+          <div class="chat-in"><input id="chat-in" placeholder="Ej. ¿Cuánto perderé si no compro hoy?" onkeydown="if(event.key==='Enter')ask(this.value)"><button class="btn btn-b" onclick="ask(document.getElementById('chat-in').value)">➤</button></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px"><h3>🎯 Radar de riesgo</h3><p class="sub2">Rojo = quiebre inminente · Violeta = exceso / muerto · Verde = oportunidad de compra con margen</p>
+        <div class="radar"><div class="col r-crit"><b>🔴 Quiebre inminente</b><ul id="radar-crit"></ul></div><div class="col r-ex"><b>🟣 Exceso / muerto</b><ul id="radar-ex"></ul></div><div class="col r-op"><b>🟢 Oportunidad</b><ul id="radar-op"></ul></div></div></div>
+    </div>
+
+    <!-- FORECAST -->
+    <div class="page" id="p-forecast">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">IA Predictiva 🔮</h2>
+      <p class="muted" style="margin:0 0 18px">Kernel: media móvil 30d × tendencia × estacionalidad (finde + quincena) · mismo motor en <span class="mono">ai-engine/forecast.py</span></p>
+      <div class="panel"><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"><select id="fc-sku" class="chip" style="padding:9px 14px"></select><div class="tabs" style="margin:0" id="fc-tabs2"><button class="tab on" data-h="30">30d</button><button class="tab" data-h="60">60d</button><button class="tab" data-h="90">90d</button><button class="tab" data-h="180">180d</button></div></div>
+      <canvas class="chart" id="ch-fc2" style="height:300px!important"></canvas>
+      <div id="fc-explain" style="margin-top:14px;font-size:14px;line-height:1.65"></div></div>
+    </div>
+
+    <!-- REPLENISHMENT -->
+    <div class="page" id="p-replenishment">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Motor de reabastecimiento ⚡</h2>
+      <p class="muted" style="margin:0 0 18px">ROP · Safety stock (95%) · Cobertura en días · Inversión requerida · Pérdida evitada</p>
+      <div class="panel"><table><thead><tr><th>SKU</th><th>Stock</th><th>ROP</th><th>Safety</th><th>Cobertura</th><th>Sugerido</th><th>Inversión</th><th>Estado</th><th></th></tr></thead><tbody id="rep-body"></tbody></table></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="p-orders">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Órdenes de compra 🧾</h2>
+      <p class="muted" style="margin:0 0 18px">Generadas por IA · aprueba en 1 clic · se envían por WhatsApp + Email + PDF</p>
+      <div id="oc-list"></div>
+    </div>
+
+    <!-- FINANCING -->
+    <div class="page" id="p-financing">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Financiamiento inteligente 💳</h2>
+      <p class="muted" style="margin:0 0 18px">Marketplace: bancos + fintechs + fondos · la IA ordena por costo total vs tu ciclo de inventario</p>
+      <div class="panel" style="margin-bottom:14px"><h3>🧮 Simulador</h3><p class="sub2">Necesidad total de compra 30d: <b class="mono" id="fin-need"></b></p>
+        <input type="range" id="fin-range" min="10000" max="200000" step="5000" value="60000" style="width:100%" oninput="renderFin()"></div>
+      <div id="fin-list"></div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="p-inventory">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Inventario en tiempo real 📦</h2>
+      <p class="muted" style="margin:0 0 18px">ABC × XYZ · rotación · margen · dinero inmovilizado</p>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)" id="inv-kpis"></div>
+      <div class="panel"><table><thead><tr><th>SKU</th><th>Categoría</th><th>Stock</th><th>Valorizado</th><th>ABC</th><th>XYZ</th><th>Margen</th><th>Diagnóstico</th></tr></thead><tbody id="inv-body"></tbody></table></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="p-analytics">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Analytics ejecutivo 📊</h2>
+      <p class="muted" style="margin:0 0 18px">GMROI · Fill Rate · Sell-Through · OTIF · Nivel de servicio</p>
+      <div class="kpi-grid" id="ana-kpis"></div>
+      <div class="cols2"><div class="panel"><h3>Ventas vs forecast (180d)</h3><canvas class="chart" id="ch-ana1"></canvas></div>
+      <div class="panel"><h3>Mix ABC por valor</h3><canvas class="chart" id="ch-ana2"></canvas></div></div>
+    </div>
+
+    <!-- INTEGRATIONS -->
+    <div class="page" id="p-integrations">
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Integraciones 🔌</h2>
+      <p class="muted" style="margin:0 0 18px">Onboarding en 1 día: conecta tu fuente y la IA empieza a predecir en minutos</p>
+      <div class="int-grid" id="int-grid"></div>
+      <div class="panel" style="margin-top:14px"><h3>📤 Importación inmediata</h3><p class="sub2">Arrastra tu Excel de ventas + inventario y genera tu primer forecast sin IT.</p>
+      <div style="border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--muted);cursor:pointer" onclick="toast('✓ Archivo ventas_2026.xlsx procesado: 14 SKUs · 180 días · forecast listo')">⬆ Arrastra <b>ventas_2026.xlsx</b> aquí o <u>haz clic para simular carga</u></div></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
