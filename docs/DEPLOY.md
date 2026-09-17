@@ -6,7 +6,7 @@
 ## 1. GitHub (comandos exactos)
 
 ```bash
-cd inventa-ai
+cd Desktop/InventaAI
 git init -b main
 git add .
 git commit -m "feat: lanzamiento v1.0.0 a producción"
@@ -29,16 +29,16 @@ automáticos en cada push a `main`** (el CI es el gate).
 **Opción B (CLI):**
 ```bash
 npm i -g vercel
-vercel link   # root: ./  (inventa-ai)
+vercel link   # raíz del repo (Desktop/InventaAI)
 vercel --prod
 ```
 
 | Setting | Valor |
 |---|---|
-| Framework | Other (estático) |
-| Build Command | (vacío — `vercel.json` tiene `buildCommand: null`) |
-| Output Directory | `web` (vía `vercel.json`) |
-| Install Command | n/a |
+| Framework | Other (estático + build esbuild) |
+| Build Command | `npm run build` (bundle → `public/`) |
+| Output Directory | `public` (vía `vercel.json`) |
+| Install Command | `npm ci` |
 | Production Branch | `main` |
 
 **Env vars del frontend:** ninguna requerida (sitio 100% estático).

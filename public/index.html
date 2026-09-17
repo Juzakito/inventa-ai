@@ -24,7 +24,8 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="vendor/chart.umd.min.js"></script>
-<link rel="stylesheet" href="styles.css">
+<script src="js/app.bundle.js"></script>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <div id="toast"></div>
@@ -295,7 +296,7 @@
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">Inventario · centro de inteligencia 📦</h2>
       <p class="muted" style="margin:0 0 18px">Stock actual vs ideal · días restantes · riesgo · impacto financiero · prioridad — todo accionable</p>
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)" id="inv-kpis"></div>
-      <div class="panel"><div class="toolbar"><input id="inv-q" placeholder="⌕ Buscar productos, SKUs, proveedores…" oninput="renderInv()"><select id="inv-cat" onchange="renderInv()"><option value="">Categoría: todas</option></select><select id="inv-risk" onchange="renderInv()"><option value="">Estado: todos</option><option value="ok">Óptimo</option><option value="risk">Bajo</option><option value="critical">Crítico</option><option value="excess">Exceso</option></select><select id="inv-sup" onchange="renderInv()"><option value="">Proveedor: todos</option></select><button class="btn btn-b btn-s" onclick="openSkuModal()">+ Nuevo Producto</button><button class="btn btn-g btn-s" style="margin-left:auto" onclick="exportInvCSV()">⬇ Exportar</button></div>
+      <div class="panel"><div class="toolbar"><input id="inv-q" aria-label="Buscar productos" placeholder="⌕ Buscar productos, SKUs, proveedores…" oninput="renderInv()"><select id="inv-cat" aria-label="Filtrar por categoría" onchange="renderInv()"><option value="">Categoría: todas</option></select><select id="inv-risk" aria-label="Filtrar por estado" onchange="renderInv()"><option value="">Estado: todos</option><option value="ok">Óptimo</option><option value="risk">Bajo</option><option value="critical">Crítico</option><option value="excess">Exceso</option></select><select id="inv-sup" aria-label="Filtrar por proveedor" onchange="renderInv()"><option value="">Proveedor: todos</option></select><button class="btn btn-b btn-s" onclick="openSkuModal()">+ Nuevo Producto</button><button class="btn btn-g btn-s" style="margin-left:auto" onclick="exportInvCSV()">⬇ Exportar</button></div>
       <div class="tscroll"><table><thead><tr><th>SKU</th><th>Producto</th><th>Categoría</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Estado</th><th>Proveedor</th><th>Último Reabastecimiento</th><th></th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
     </div>
 
@@ -363,7 +364,8 @@
           <div style="font-size:13.5px" id="perm-list"></div></div>
         <div class="panel"><h3>🔐 Seguridad</h3><p class="sub2">Doble factor para aprobar OCs mayores a S/ 10,000.</p>
           <div class="rule" style="margin:0"><div><b>MFA (app autenticadora)</b><p id="mfa-st">Desactivado</p></div><div class="switch" id="mfa-sw" onclick="toggleMFA()"></div></div>
-          <p class="muted" style="font-size:13px;margin:12px 0 0">Sesión: SM · Lima · OAuth Google · último acceso hoy 08:59. Cifrado AES-256/TLS 1.3.</p></div>
+          <p class="muted" style="font-size:13px;margin:12px 0 0">Sesión: SM · Lima · OAuth Google · último acceso hoy 08:59. Cifrado AES-256/TLS 1.3.</p>
+          <div class="rule" style="margin:12px 0 0"><div><b>🔌 Backend API</b><p id="api-st">Sin configurar — la app corre 100% local.</p></div><button class="btn btn-g btn-s" style="margin-left:auto" onclick="pingBackend().then(r=>document.getElementById('api-st').textContent=r).catch(e=>document.getElementById('api-st').textContent='⛔ Sin conexión ('+e.message+'). Despliega api/ y define window.__API_BASE__.')">Probar</button></div></div>
       </div>
       <div class="panel" style="margin-top:14px"><h3>📜 Auditoría</h3><p class="sub2">Cada acción sensible queda registrada con usuario, rol y hora</p>
         <div class="tscroll"><table><thead><tr><th>Hora</th><th>Usuario</th><th>Rol</th><th>Acción</th></tr></thead><tbody id="audit-body"></tbody></table></div></div>
@@ -374,7 +376,7 @@
 </div>
 
 <!-- OC modal -->
-<div class="modal-bg" id="oc-modal"><div class="modal">
+<div class="modal-bg" id="oc-modal"><div class="modal" role="dialog" aria-modal="true" aria-label="Orden de compra">
   <h3 id="ocm-title">Nueva orden de compra</h3>
   <p class="muted" style="font-size:13.5px;margin:0 0 6px">Los totales se calculan con tus costos reales.</p>
   <div class="field"><label>Proveedor</label><select id="ocm-sup"></select></div>
@@ -386,7 +388,7 @@
 </div></div>
 
 <!-- SKU modal -->
-<div class="modal-bg" id="sku-modal"><div class="modal">
+<div class="modal-bg" id="sku-modal"><div class="modal" role="dialog" aria-modal="true" aria-label="Nuevo producto">
   <h3>Nuevo producto</h3>
   <p class="muted" style="font-size:13.5px;margin:0 0 6px">Entra al maestro y al motor de inmediato (venta diaria = base del forecast).</p>
   <div class="field"><label>Nombre del producto</label><input id="sku-name" placeholder="Ej. Aceite Cocinero 900ml"></div>
@@ -401,7 +403,7 @@
 </div></div>
 
 <!-- Demo modal -->
-<div class="modal-bg" id="demo-modal"><div class="modal">
+<div class="modal-bg" id="demo-modal"><div class="modal" role="dialog" aria-modal="true" aria-label="Solicitar demo">
   <div id="demo-form">
     <h3>Solicitar demo personalizada</h3>
     <p class="muted" style="font-size:13.5px;margin:0 0 6px">Te mostramos tu propio forecast con tus datos en 30 minutos.</p>
@@ -413,6 +415,5 @@
   </div>
   <div id="demo-ok" style="display:none;text-align:center;padding:20px 0"><div style="font-size:48px">✅</div><h3>¡Solicitud recibida!</h3><p class="muted">Te contactaremos en menos de 24h hábiles con tu forecast de muestra.</p><button class="btn btn-b" onclick="closeModal('demo-modal');enterApp('dashboard')">Mientras tanto: ver simulación →</button></div>
 </div></div>
-<script src="app.js"></script>
 </body>
 </html>

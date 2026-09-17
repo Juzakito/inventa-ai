@@ -1,5 +1,6 @@
-// INVENTA.AI — Demo Data Engine (LATAM, PEN)
-// Datos deterministas para demo VC. Sin dependencias.
+// INVENTA.AI — Motor de datos y cálculo (src/lib/engine.js)
+// Única fuente de verdad del frontend. Sin dependencias, sin DOM.
+// Paridad intencional con ai-engine/*.py (misma especificación, tests en ambos lados).
 
 const PEN = (n) => "S/ " + Number(n).toLocaleString("es-PE", { maximumFractionDigits: 0 });
 
@@ -14,9 +15,7 @@ const SUPPLIERS = {
   NESTLE: { name: "Nestlé Perú", leadTime: 5, rating: 4.7, discount: "—", contact: "Canal tradicional", email: "ventas@nestle.com.pe", wa: "5114333333" },
 };
 
-// Scorecard de proveedor calculado 100% desde el estado del sistema:
-// spend = OCs registradas + inversión sugerida por el motor; riesgo = críticos + lead time.
-// Fórmula visible en la UI: score = 0.4·rating/5 + 0.3·(1 - críticos/total) + 0.3·(1 - lead/7)
+// Scorecard calculado 100% desde el estado: score = 0.4·rating/5 + 0.3·(1-críticos/total) + 0.3·(1-lead/7)
 function supplierScore(key) {
   const skus = SKUS.filter(s => s.supplier === key);
   const reps = skus.map(s => ({ s, r: replenishment(s, 30) }));
@@ -47,7 +46,7 @@ const SKUS = [
   { id: "SKU-014", name: "Shampoo Head & Shoulders 700ml", cat: "Cuidado personal", supplier: "ALICORP", price: 38.9, cost: 27.2, stock: 680, min: 150, max: 600, lead: 4, daily: 14, cv: 0.6, margin: 30, abc: "C", xyz: "Z", dead: true },
 ];
 
-// Serie histórica 180 días generada de forma determinista (seeded) — tendencia + estacionalidad semanal + ruido
+// Serie histórica determinista (seeded): tendencia + estacionalidad + ruido
 function seededRand(seed) { let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
 function historyFor(sku, days = 180) {
   const rnd = seededRand(sku.daily * 97 + sku.id.length * 13);
@@ -56,16 +55,16 @@ function historyFor(sku, days = 180) {
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today); d.setDate(d.getDate() - i);
     const dow = d.getDay();
-    const weekendBoost = (dow === 0 || dow === 6) ? 1.28 : 1.0;      // fin de semana LATAM
-    const paydayBoost = (d.getDate() >= 28 || d.getDate() <= 3) ? 1.18 : 1.0; // quincena/fin de mes
-    const trend = 1 + (days - i) * 0.0011;                             // crecimiento ~20% semestral
+    const weekendBoost = (dow === 0 || dow === 6) ? 1.28 : 1.0;
+    const paydayBoost = (d.getDate() >= 28 || d.getDate() <= 3) ? 1.18 : 1.0;
+    const trend = 1 + (days - i) * 0.0011;
     const noise = 0.82 + rnd() * 0.36;
     out.push({ date: d.toISOString().slice(0, 10), qty: Math.max(0, Math.round(sku.daily * weekendBoost * paydayBoost * trend * noise)) });
   }
   return out;
 }
 
-// Forecast 180 días: media móvil + estacionalidad + tendencia (mismo kernel que el backend Python)
+// Forecast: media móvil 30d × tendencia × estacionalidad (mismo kernel que ai-engine/forecast.py)
 function forecastFor(sku, horizon = 90) {
   const hist = historyFor(sku, 180);
   const last30 = hist.slice(-30).reduce((a, b) => a + b.qty, 0) / 30;
@@ -84,12 +83,12 @@ function forecastFor(sku, horizon = 90) {
   return out;
 }
 
-// Motor de reposición: ROP, safety stock, EOQ simplificado
+// Reposición: ROP, safety stock (95%), cobertura, sugerido, inversión, pérdida
 function replenishment(sku, horizon = 30) {
   const fc = forecastFor(sku, horizon);
   const demandH = fc.reduce((a, b) => a + b.qty, 0);
   const avgDaily = demandH / horizon;
-  const z = 1.65; // nivel servicio 95%
+  const z = 1.65;
   const sigma = avgDaily * sku.cv;
   const safety = Math.ceil(z * sigma * Math.sqrt(sku.lead));
   const rop = Math.ceil(avgDaily * sku.lead + safety);
@@ -106,15 +105,16 @@ const FINANCING = [
   { id: "F3", entity: "Kubo Financiero", type: "Fondo", amount: 200000, rate: 1.80, term: 120, quota: 52600, approval: "48h", score: 84, tag: "Mayor monto", why: "Cubre el 100% del plan de compras 90 días. Cuota 22% menor, libera flujo para campaña navideña." },
 ];
 
-let PURCHASE_ORDERS = [
+// NOTA: const (no let) a propósito — ESM no permite reasignar bindings importados.
+// La persistencia restaura el CONTENIDO (splice/push), nunca la referencia.
+const PURCHASE_ORDERS = [
   { id: "OC-2026-184", supKey: "ALICORP", supplier: "Alicorp", items: "Aceite Primor 1L × 750 · Arroz Costeño × 300", total: 12830, status: "pending", eta: "Viernes", ai: "Evita quiebre en 2.9 días. Margen protegido S/ 2,140.", created: "2026-09-16", by: "IA Copilot", hist: [{ t: "2026-09-16 09:12", e: "Generada por IA Copilot" }] },
   { id: "OC-2026-185", supKey: "BACKUS", supplier: "Backus AB InBev", items: "Coca-Cola 2L × 220 · Cristal × 180", total: 22440, status: "pending", eta: "Mañana", ai: "Fin de semana + campaña: demanda +38%. Financia con Prestamype 4h.", created: "2026-09-16", by: "IA Copilot", hist: [{ t: "2026-09-16 09:12", e: "Generada por IA Copilot" }] },
   { id: "OC-2026-183", supKey: "GLORIA", supplier: "Gloria", items: "Leche evaporada × 400", total: 31400, status: "approved", eta: "En tránsito", ai: "Cobertura 10.5 días → 34 días. Fill rate vuelve a 98%.", created: "2026-09-15", by: "S. Martín", hist: [{ t: "2026-09-15 08:40", e: "Generada por IA Copilot" }, { t: "2026-09-15 14:02", e: "Aprobada por S. Martín" }] },
   { id: "OC-2026-182", supKey: "MOLITALIA", supplier: "Molitalia", items: "Don Vittorio × 1,200", total: 3480, status: "received", eta: "Recibida", ai: "Lead time real 5.2d vs 5d pactado. OTIF 96%.", created: "2026-09-12", by: "S. Martín", hist: [{ t: "2026-09-12 10:20", e: "Generada por IA Copilot" }, { t: "2026-09-12 11:05", e: "Aprobada por S. Martín" }, { t: "2026-09-14 16:44", e: "Marcada como recibida" }] },
 ];
 
-// Red de abastecimiento (esquemática): plantas → CD Lima → sucursales.
-// El estado (en tránsito, riesgo) se calcula desde OCs aprobadas y SKUs críticos.
+// Red de abastecimiento (esquemática): plantas → CD Lima → sucursales
 const NETWORK = {
   nodes: [
     { id: "ALICORP", label: "Alicorp · Planta Lima", type: "plant", x: 90, y: 70 },
@@ -132,8 +132,7 @@ const NETWORK = {
   ],
 };
 
-// Bandas de confianza del forecast: p10/p90 con sigma creciente en el tiempo.
-// sigma(día i) = avgDaily · CV · √i  →  banda = qty ± 1.28σ
+// Bandas p10/p90: sigma(día i) = avgDaily · CV · √i → banda = qty ± 1.28σ
 function forecastBands(sku, horizon = 30) {
   const fc = forecastFor(sku, horizon);
   const avg = fc.reduce((a, b) => a + b.qty, 0) / horizon;
@@ -142,7 +141,8 @@ function forecastBands(sku, horizon = 30) {
     return { ...p, lo: Math.max(0, Math.round(p.qty - s)), hi: Math.round(p.qty + s) };
   });
 }
-let AUTO_RULES = [
+
+const AUTO_RULES = [
   { id: "R1", name: "Borrador automático de OC ante stock crítico", desc: "Si un SKU cae bajo el 60% del ROP y no tiene OC pendiente, genera un borrador.", on: true },
   { id: "R2", name: "Alerta de quiebre al dueño", desc: "Notifica cuando la cobertura de un clase A baja del lead time.", on: true },
   { id: "R3", name: "Congelar recompra de inventario muerto", desc: "Marca como 'no comprar 60 días' los SKU con exceso.", on: false },
@@ -150,3 +150,5 @@ let AUTO_RULES = [
 ];
 
 const KPIS = { salesProj: 482600, salesDelta: 18.4, critical: 5, inventoryVal: 1240000, savings: 48600, breakRisk: 12.4, roi: 4.8, fillRate: 93.2, gmroi: 3.1, sellThrough: 71, otif: 94.6, service: 95.8 };
+
+export { PEN, SUPPLIERS, SKUS, FINANCING, KPIS, NETWORK, PURCHASE_ORDERS, AUTO_RULES, seededRand, historyFor, forecastFor, replenishment, forecastBands, supplierScore };

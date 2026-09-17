@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0] — 2026-09-17 — Reestructuración empresarial + workspace
+- Repo movido a `Desktop/InventaAI` (historial git intacto) + acceso directo "InventaAI - Workspace".
+- Arquitectura `src/` + `public/`: `lib/engine` · `store/state` · `components/{ui,sections}` · `services/{actions,automation}` · `api/client` · `app/{router,main}` · `config` · `types` (JSDoc).
+- Bundle esbuild (IIFE+minify+sourcemap) → `public/` es el único output; `vercel.json` con build.
+- `src/api/client.js` con prueba de conexión real desde Ajustes → Backend.
+- A11y: modales `role=dialog`, foco inicial, cierre con Esc, `aria-label`s.
+- `docs/AUDIT.md` (10 hallazgos), `deployment/` (vercel/dns/rollback), setup `ps1/bat/sh/mac.sh`.
+- CI actualizado a raíz (sin working-directory); build valida 21 IDs + ausencia de legacy.
+
 ## [1.3.0] — 2026-09-17 — Lenguaje visual de los mockups
 - Sidebar navy permanente + fondo claro premium; pills de estado Óptimo/Bajo/Crítico.
 - Analytics estilo mockup 3: 3 KPI cards con sparklines (trailing reconstruido día a día desde el historial: stock(d) = stock + vendido), forecast-vs-real mensual 12M (6 reales + 6 IA), barras por categoría, donut por categoría, heatmap de cobertura SKU×categoría, filtro de período funcional (30/90/180).

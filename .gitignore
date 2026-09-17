@@ -1,5 +1,8 @@
 # Deps
 node_modules/
+# Build outputs (se regeneran con npm run build)
+public/js/
+public/css/
 # Python
 __pycache__/
 *.py[cod]

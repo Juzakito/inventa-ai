@@ -4,60 +4,59 @@
 [![Vercel](https://img.shields.io/badge/deploy-Vercel-black?logo=vercel)](https://inventa.ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Predice demanda · evita quiebres · automatiza OCs · financia inventario.
+> Transformamos datos en decisiones de abastecimiento.
 > Garantía: **S/ 5,000 de ahorro en 30 días o no pagas.**
 
-**Producción:** https://inventa.ai · **Demo 60s:** landing → "Ver Simulación en vivo" → dashboard + Copilot + 6 módulos.
+**Producción:** https://inventa.ai · **Workspace local:** `Desktop/InventaAI`
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Juzakito/inventa-ai&root-directory=web)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Juzakito/inventa-ai)
 
-## Estructura
+## Arquitectura
 
 ```
-inventa-ai/
-├── web/                 ← frontend prod (estático, cero deps runtime) → https://inventa.ai
-│   ├── index.html       ← landing + SPA (8 vistas)
-│   ├── styles.css       ← design system (light/dark, glass)
-│   ├── app.js / data.js ← lógica + kernel predictivo (mirror de ai-engine)
-│   ├── vendor/          ← Chart.js 4.4.1 vendored (sin CDN en runtime)
-│   ├── robots.txt / sitemap.xml / manifest.json / favicon.svg
-│   └── package.json     ← lint + test + build (solo devDeps)
-├── api/                 ← FastAPI (forecast, reposición, OCs, financiamiento, copilot)
-├── ai-engine/           ← motor IA + smoke tests
-├── db/                  ← Postgres multi-tenant (RLS + particionado) + seed
-├── mobile/              ← spec Expo iOS/Android
-├── docs/                ← arquitectura, API, seguridad, roadmap, DEPLOY
-├── vercel.json          ← headers OWASP (CSP/HSTS), caché, clean URLs
-└── .github/workflows/   ← CI: lint → tests → build → secret scan (gate del deploy)
+InventaAI/
+├── public/             ← único output a producción (bundle + assets)
+│   ├── index.html      ← shell (landing + SPA)
+│   ├── css/ js/ vendor/ ← generados/copiados por npm run build
+│   └── robots.txt sitemap.xml manifest.json favicon.svg
+├── src/
+│   ├── app/            ← main.js (boot + API window) · router.js (SPA)
+│   ├── components/
+│   │   ├── ui/         ← toast, modales, Chart.js defaults, sparklines
+│   │   ├── sections/   ← views-home · views-ops · views-system
+│   │   ├── layout/ forms/ ← puntos de extensión (v2.0)
+│   ├── pages/ hooks/   ← puntos de extensión (v2.0)
+│   ├── lib/            ← engine.js (datos + forecast + reposición, sin DOM)
+│   ├── services/       ← actions.js (mutaciones) · automation.js (R1–R4)
+│   ├── api/            ← client.js (FastAPI; ping real desde Ajustes)
+│   ├── store/          ← state.js (sesión + persistencia + auditoría)
+│   ├── types/          ← models.js (contratos JSDoc)
+│   ├── assets/         ← icons/ (favicon fuente) · images/ videos/
+│   ├── styles/         ← styles.css (fuente; build lo copia a public/)
+│   └── config/         ← constants.js
+├── tests/              ← engine-check · audit-ids (frontend)
+├── scripts/            ← build · validate · setup (ps1/bat/sh/mac)
+├── deployment/         ← vercel/dns/rollback runbooks
+├── api/ ai-engine/     ← backend FastAPI + motor Python (paridad con lib/)
+├── db/                 ← Postgres multi-tenant + seed
+├── docs/               ← AUDIT · arquitectura · API · seguridad · roadmap · deploy
+└── mobile/             ← spec Expo iOS/Android
 ```
 
-## Desarrollo local
+**Reglas:** las vistas solo leen; toda mutación pasa por `services/` (permiso → cambio → auditoría → re-render). `lib/` no toca el DOM. Superficie `window` mínima y documentada en `src/app/main.js`.
+
+## Desarrollo
 
 ```bash
-# Web (sin instalación)
-python -m http.server 5173 --directory web   # → http://localhost:5173
-
-# Frontend checks (requiere node 20+)
-cd web && npm ci && npm run lint && npm test && npm run build
-
-# Motor IA (solo stdlib) + API
-python ai-engine/test_smoke.py
-pip install fastapi uvicorn pydantic && uvicorn main:app --reload --port 8000  # desde api/
+npm install      # dependencias (solo dev: esbuild + htmlhint)
+npm run build    # bundle + validación → public/
+npm test         # motor + IDs + smoke Python
+npm run lint     # htmlhint + node --check
+npm run serve    # http://localhost:5173 (sirve public/)
 ```
+
+O automático: `scripts/setup.ps1` (Windows) · `setup.sh` (Linux) · `setup-mac.sh` (macOS).
 
 ## Deploy
 
-Ver **`docs/DEPLOY.md`** (comandos git exactos, Vercel, DNS, env vars, checklist).
-Cada push a `main` → CI en verde → Vercel despliega a producción automáticamente.
-
-## Documentación
-
-| Doc | Contenido |
-|---|---|
-| `docs/DEPLOY.md` | Guía de lanzamiento: GitHub, Vercel, dominio, DNS, rollback |
-| `docs/ARCHITECTURE.md` | Arquitectura y ruta a 500k empresas |
-| `docs/API.md` | Spec de la API v1 |
-| `docs/SECURITY.md` | Controles técnicos |
-| `docs/ROADMAP-GTM.md` | Roadmap + GTM LATAM + pitch VC |
-
-Licencia MIT — ver `LICENSE`. Cómo contribuir: `CONTRIBUTING.md`.
+`git push main` → CI en verde → Vercel publica `public/`. Detalle: `docs/DEPLOY.md`, `deployment/`.
