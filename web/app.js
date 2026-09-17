@@ -12,7 +12,7 @@ function chartBase() {
     responsive: true, maintainAspectRatio: false,
     layout: { padding: { top: 10, right: 8 } },
     interaction: { mode: "index", intersect: false },
-    plugins: { legend: { position: "top", align: "end", labels: { color: dark ? "#EDF1FF" : "#0B1023", usePointStyle: true, boxWidth: 6, boxHeight: 6, padding: 16, font: { size: 12 } } },
+    plugins: { legend: { position: "top", align: "end", labels: { color: dark ? "#EDF1FF" : "#0B1023", usePointStyle: true, boxWidth: 6, boxHeight: 6, padding: 16, font: { size: 12 }, filter: (it) => it.text !== "p10" } },
       tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}u` } } },
     scales: {
       x: { grid: { color: dark ? "rgba(255,255,255,.06)" : "rgba(11,16,35,.06)" }, ticks: { maxTicksLimit: 8, color: tick, font: { size: 11 }, maxRotation: 0 } },
@@ -23,7 +23,10 @@ function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("s
 function toggleTheme() { const h = document.documentElement; h.dataset.theme = h.dataset.theme === "dark" ? "light" : "dark"; }
 function enterApp(p) { $("#view-landing").style.display = "none"; $("#view-app").style.display = "block"; window.scrollTo(0, 0); if (p) go(p); runAutomations(false); }
 function exitApp() { $("#view-app").style.display = "none"; $("#view-landing").style.display = ""; window.scrollTo(0, 0); }
-function go(p) { $$(".side .mi[data-p]").forEach(b => b.classList.toggle("on", b.dataset.p === p)); $$(".page").forEach(x => x.classList.remove("on")); $("#p-" + p).classList.add("on"); document.querySelector(".side").classList.remove("open"); const s = $("#scrim"); if (s) s.classList.remove("on"); if (p === "analytics") drawAnalytics(); if (p === "suppliers") renderSuppliers(); if (p === "auto") renderAuto(); if (p === "settings") renderSettings(); }
+function go(p) { $$(".side .mi[data-p]").forEach(b => b.classList.toggle("on", b.dataset.p === p)); $$(".page").forEach(x => x.classList.remove("on")); $("#p-" + p).classList.add("on"); document.querySelector(".side").classList.remove("open"); const s = $("#scrim"); if (s) s.classList.remove("on");
+  if (p === "dashboard") renderHome();
+  if (p === "analytics") drawAnalytics(); if (p === "suppliers") renderSuppliers(); if (p === "auto") renderAuto(); if (p === "settings") renderSettings();
+  if (p === "orders") renderBuyDesk(); if (p === "financing") { syncFinNeed(); renderFin(); renderFinSnap(); } if (p === "inventory") renderInv(); if (p === "replenishment") renderRep(); }
 $$(".side .mi[data-p]").forEach(b => b.onclick = () => go(b.dataset.p));
 function closeModal(id) { $("#" + id).classList.remove("open"); }
 $$(".modal-bg").forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); }));
@@ -58,38 +61,115 @@ const reps30 = () => SKUS.map(s => ({ s, r: replenishment(s, 30) }));
 const frozen = () => reps30().filter(x => x.r.status === "excess").reduce((a, x) => a + x.s.stock * x.s.cost, 0);
 const pendingOCs = () => PURCHASE_ORDERS.filter(o => o.status === "pending");
 
-/* ---------- KPIs dashboard ---------- */
-function renderKPIs() {
-  const k = KPIS, reps = reps30();
-  const crit = reps.filter(x => ["critical", "risk"].includes(x.r.status)).length;
-  const loss = reps.reduce((a, x) => a + x.r.lossRisk, 0);
-  $("#kpi-grid").innerHTML = [
-    ["Ventas proyectadas 30d", PEN(k.salesProj), `▲ +${k.salesDelta}%`, "up"],
-    ["Stock crítico", crit + " SKUs", "● comprar hoy", "down"],
-    ["Inventario valorizado", PEN(k.inventoryVal), "14 SKUs activos", ""],
-    ["Capital inmovilizado", PEN(frozen()), "3 SKUs muertos", "down"],
-    ["Órdenes pendientes", pendingOCs().length, PEN(pendingOCs().reduce((a, o) => a + o.total, 0)), ""],
-    ["Ahorro generado", PEN(k.savings), "ROI " + k.roi + "×", "up"],
-    ["Riesgo de quiebre", k.breakRisk + "%", PEN(loss) + " en juego", "down"],
-    ["Fill Rate", k.fillRate + "%", "▲ +2.1 pts", "up"],
-  ].map(x => `<div class="panel" style="padding:15px"><small class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">${x[0]}</small><b class="mono" style="display:block;font-size:19px;margin:5px 0 2px">${x[1]}</b><span style="font-size:12px;font-weight:700" class="${x[3]}">${x[2]}</span></div>`).join("");
+/* ---------- Modos Ejecutivo / Operaciones ---------- */
+let MODE = "ops";
+function setMode(m) { MODE = m; const v = $("#view-app"); v.classList.remove("mode-exec", "mode-ops"); v.classList.add("mode-" + m);
+  $("#seg-exec").classList.toggle("on", m === "exec"); $("#seg-ops").classList.toggle("on", m === "ops"); audit("Vista " + (m === "exec" ? "Ejecutiva" : "Operaciones")); }
+
+/* ---------- HOME · Bloque 1: resumen ejecutivo ---------- */
+function renderHome() {
+  const reps = reps30();
+  const byLoss = [...reps].sort((x, y) => y.r.lossRisk - x.r.lossRisk);
+  const crit = reps.filter(x => ["critical", "risk"].includes(x.r.status));
+  const exc = reps.filter(x => x.r.status === "excess");
+  const plan = reps.reduce((a, x) => a + x.r.investment, 0);
+  const frozenVal = exc.reduce((a, x) => a + x.s.stock * x.s.cost, 0);
+  // Hoy debes comprar: top-2 por pérdida evitada
+  $("#exec-buy").innerHTML = byLoss.slice(0, 2).map(x => `<div><span>• <b>${x.s.name}</b> <span class="muted">· ${SUPPLIERS[x.s.supplier].name}</span></span><b class="mono">${x.r.suggested}u</b></div>`).join("");
+  const minDays = crit.length ? Math.min(...crit.map(x => x.r.daysCover)) : 99;
+  $("#exec-risk-n").textContent = crit.length + " SKUs";
+  $("#exec-risk-t").textContent = crit.length ? `Agotarán stock en ~${minDays.toFixed(0)} días si no compras hoy.` : "Sin quiebres proyectados a 30 días.";
+  const saving = Math.round(plan * 0.02 + frozenVal * 0.15);
+  $("#exec-opp-n").textContent = PEN(saving);
+  $("#exec-opp-t").textContent = `2% pronto pago sobre plan de ${PEN(plan)} + 15% recuperable de muertos.`;
+  // Snapshot ejecutivo
+  $("#exec-snap").innerHTML = [["Capital inmovilizado", PEN(frozenVal)], ["Ahorro generado 30d", PEN(KPIS.savings)], ["Riesgo de quiebre", KPIS.breakRisk + "%"], ["Ventas pronosticadas", PEN(KPIS.salesProj)], ["ROI estimado", KPIS.roi + "×"]].map(x => `<span><span class="muted">${x[0]}:</span> <b class="mono">${x[1]}</b></span>`).join("");
+  // Bloque 2: centro de decisiones
+  $("#dec-red-n").textContent = crit.length;
+  $("#dec-red-l").innerHTML = crit.slice(0, 3).map(x => `<li>${x.s.name} — ${x.r.daysCover.toFixed(1)}d</li>`).join("") || "<li>Sin riesgos</li>";
+  const atten = reps.filter(x => x.r.status === "risk").length + pendingOCs().length;
+  $("#dec-yel-n").textContent = atten;
+  $("#dec-yel-l").innerHTML = `<li>${pendingOCs().length} OCs pendientes de aprobación</li>` + reps.filter(x => x.r.status === "risk").slice(0, 2).map(x => `<li>${x.s.name} bajo ROP</li>`).join("");
+  $("#dec-grn-n").textContent = PEN(frozenVal + KPIS.savings).replace("S/ ", "S/ ");
+  $("#dec-grn-l").innerHTML = `<li>${PEN(frozenVal)} inmovilizados recuperables</li><li>Financiamiento 1.45% pre-aprobado</li>`;
+  // Modo ops: qué / cuánto / a quién / cuándo
+  $("#opsbuy-body").innerHTML = byLoss.filter(x => x.r.suggested > 0).slice(0, 5).map(x => `<tr><td><b>${x.s.name}</b></td><td class="mono"><b>${x.r.suggested}u</b></td><td>${SUPPLIERS[x.s.supplier].name}</td><td class="mono">≤ ${x.s.lead}d</td><td><button class="btn btn-b btn-s" onclick="quickOC('${x.s.id}')">Comprar</button></td></tr>`).join("");
+  // Bloque 5: variables explicativas
+  const top = SKUS[0], r0 = replenishment(top, 30);
+  $("#pred-vars").innerHTML = [
+    ["📈 Tendencia", "Demanda +3–5% mensual en clase A (media móvil 30d)"],
+    ["📅 Estacionalidad", "Finde ×1.28 · quincena ×1.18 (patrón LATAM verificado)"],
+    ["🎲 Volatilidad", `CV promedio ${(reps.reduce((a, x) => a + x.s.cv, 0) / reps.length * 100).toFixed(0)}% → banda p10–p90`],
+    ["⚠️ Factores de riesgo", `${crit.length} SKUs bajo ROP · lead máximo ${Math.max(...SKUS.map(s => s.lead))}d (Kimberly-Clark)`],
+  ].map(x => `<div><b>${x[0]}</b><br><span class="muted">${x[1]}</span></div>`).join("");
+  renderSupMap();
 }
 
-/* ---------- Forecast charts ---------- */
-let H = 30;
-function drawForecast(canvas, sku, h) {
-  const hist = historyFor(sku, 60).slice(-30);
-  const fc = forecastFor(sku, h);
-  const labels = [...hist.map(x => x.date.slice(5)), ...fc.map(x => x.date.slice(5))];
-  if (CH[canvas]) CH[canvas].destroy();
-  CH[canvas] = new Chart(document.getElementById(canvas), { type: "line",
-    data: { labels, datasets: [
-      { label: "Histórico", data: [...hist.map(x => x.qty), ...Array(fc.length).fill(null)], borderColor: "#93A0BC", borderDash: [5, 5], pointRadius: 0, pointStyle: "line", tension: .35 },
-      { label: "Forecast IA", data: [...Array(hist.length - 1).fill(null), hist[hist.length - 1].qty, ...fc.map(x => x.qty)], borderColor: "#1B3BFF", backgroundColor: "rgba(27,59,255,.12)", fill: true, pointRadius: 0, pointStyle: "line", tension: .35, borderWidth: 2.5 }] },
-    options: chartBase() });
+/* ---------- HOME · Bloque 4: mapa de abastecimiento ---------- */
+function edgeStatus(a, b) {
+  if (a === "CD") return "ok";
+  const skus = SKUS.filter(s => s.supplier === a);
+  const bad = skus.some(s => ["critical", "risk"].includes(replenishment(s, 30).status));
+  if (bad) return "warn";
+  const transit = PURCHASE_ORDERS.some(o => o.supKey === a && o.status === "approved");
+  return transit ? "ok" : "";
 }
-drawForecast("ch-forecast", SKUS[0], 30);
-$$("#fc-tabs .tab").forEach(t => t.onclick = () => { $$("#fc-tabs .tab").forEach(x => x.classList.remove("on")); t.classList.add("on"); H = +t.dataset.h; drawForecast("ch-forecast", SKUS[0], H); });
+function renderSupMap() {
+  const el = $("#supmap"); if (!el) return;
+  const riskSup = new Set(SKUS.filter(s => ["critical", "risk"].includes(replenishment(s, 30).status)).map(s => s.supplier));
+  let svg = "";
+  NETWORK.edges.forEach(e => { const a = NETWORK.nodes.find(n => n.id === e.from), b = NETWORK.nodes.find(n => n.id === e.to);
+    svg += `<line class="edge ${edgeStatus(e.from, e.to)}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" />`; });
+  NETWORK.nodes.forEach(n => { const cls = n.type === "plant" ? "n-plant" : n.type === "dc" ? "n-dc" : "n-branch";
+    const risk = riskSup.has(n.id) ? " n-risk" : "";
+    const col = n.type === "dc" ? "#fff" : "var(--primary)";
+    svg += `<g class="node ${cls}${risk}" onclick="mapDetail('${n.id}')"><circle cx="${n.x}" cy="${n.y}" r="${n.type === "dc" ? 20 : 13}" fill="${n.type === "dc" ? "var(--primary)" : "var(--card)"}"/><text x="${n.x}" y="${n.y + (n.type === "dc" ? 34 : 28)}" text-anchor="middle">${n.label}</text>${riskSup.has(n.id) ? `<text x="${n.x}" y="${n.y - 20}" text-anchor="middle" style="fill:var(--bad)">● riesgo</text>` : ""}</g>`; });
+  el.innerHTML = svg;
+  mapDetail("CD");
+}
+function mapDetail(id) {
+  const n = NETWORK.nodes.find(x => x.id === id); const el = $("#map-detail");
+  if (id === "CD") { const reps = reps30(); const crit = reps.filter(x => ["critical", "risk"].includes(x.r.status)).length;
+    const transit = PURCHASE_ORDERS.filter(o => o.status === "approved").length;
+    el.innerHTML = `<b>${n.label}</b><div>📦 Valorizado: <b class="mono">${PEN(KPIS.inventoryVal)}</b></div><div>🚚 En tránsito: <b>${transit} OCs</b> aprobadas</div><div>🔴 SKUs en riesgo: <b>${crit}</b></div><div>✅ Fill rate: <b>93.2%</b> (meta 98%)</div>`; return; }
+  if (n.type === "branch") { el.innerHTML = `<b>${n.label}</b><div>📦 Cobertura: <b>18–24 días</b> (reposición semanal desde CD)</div><div>🚚 Próximo despacho: <b>mañana 06:00</b></div><div>✅ Sin quiebres activos</div>`; return; }
+  const x = supplierScore(id);
+  el.innerHTML = `<b>${x.sup.name}</b><div>Score IA: <b class="mono">${x.score}/100 (${x.grade})</b> · ${x.risk}</div><div>Lead time: <b>${x.sup.leadTime}d</b> · ★ ${x.sup.rating}</div><div>En OCs: <b class="mono">${PEN(x.spendOC)}</b> · plan 30d <b class="mono">${PEN(x.spendPlan)}</b></div><div>✉️ ${x.sup.email}</div><div><button class="btn btn-g btn-s" onclick="go('suppliers')">Abrir ficha →</button></div>`;
+}
+
+/* ---------- Forecast charts (con bandas p10–p90) ---------- */
+let H = 30;
+function lineSets(hist, fc, band) {
+  return [
+    { label: "Histórico", data: [...hist, ...Array(fc.length).fill(null)], borderColor: "#93A0BC", borderDash: [5, 5], pointRadius: 0, pointStyle: "line", tension: .35 },
+    ...(band ? [{ label: "p10", data: [...Array(hist.length - 1).fill(null), ...band.map(b => b.lo)], borderColor: "rgba(27,59,255,0)", pointRadius: 0, tension: .35 }, { label: "Banda p10–p90", data: [...Array(hist.length - 1).fill(null), ...band.map(b => b.hi)], borderColor: "rgba(27,59,255,0)", backgroundColor: "rgba(27,59,255,.16)", fill: "-1", pointRadius: 0, tension: .35 }] : []),
+    { label: "Forecast IA", data: [...Array(hist.length - 1).fill(null), hist[hist.length - 1], ...fc], borderColor: "#1B3BFF", borderWidth: 2.5, pointRadius: 0, pointStyle: "line", tension: .35 },
+  ];
+}
+function drawForecast(canvas, sku, h) {
+  const hist = historyFor(sku, 60).slice(-30).map(x => x.qty);
+  const b = forecastBands(sku, h);
+  const labels = [...historyFor(sku, 60).slice(-30).map(x => x.date.slice(5)), ...b.map(x => x.date.slice(5))];
+  if (CH[canvas]) CH[canvas].destroy();
+  CH[canvas] = new Chart(document.getElementById(canvas), { type: "line", data: { labels, datasets: lineSets(hist, b.map(x => x.qty), b) }, options: chartBase() });
+}
+// Agregado top-3 SKUs para el home (demanda total de la empresa)
+function drawAggregate(canvas, h) {
+  const top = [...SKUS].sort((a, b) => b.daily - a.daily).slice(0, 3);
+  const hist = historyFor(top[0], 60).slice(-30);
+  const labels = [...hist.map(x => x.date.slice(5))];
+  const sumH = hist.map((_, i) => top.reduce((a, s) => a + historyFor(s, 60).slice(-30)[i].qty, 0));
+  const bands = top.map(s => forecastBands(s, h));
+  const sumF = bands[0].map((_, i) => bands.reduce((a, b) => a + b[i].qty, 0));
+  const sumLo = bands[0].map((_, i) => bands.reduce((a, b) => a + b[i].lo, 0));
+  const sumHi = bands[0].map((_, i) => bands.reduce((a, b) => a + b[i].hi, 0));
+  bands[0].forEach((p, i) => labels.push(p.date.slice(5)));
+  if (CH[canvas]) CH[canvas].destroy();
+  CH[canvas] = new Chart(document.getElementById(canvas), { type: "line", data: { labels, datasets: lineSets(sumH, sumF, sumHi.map((hi, i) => ({ hi, lo: sumLo[i] }))) }, options: chartBase() });
+  return { total: sumF.reduce((a, b) => a + b, 0), lo: sumLo.reduce((a, b) => a + b, 0), hi: sumHi.reduce((a, b) => a + b, 0) };
+}
+drawAggregate("ch-forecast", 30);
+$$("#fc-tabs .tab").forEach(t => t.onclick = () => { $$("#fc-tabs .tab").forEach(x => x.classList.remove("on")); t.classList.add("on"); H = +t.dataset.h; drawAggregate("ch-forecast", H); });
 (function () {
   const sel = $("#fc-sku"); sel.innerHTML = SKUS.map((s, i) => `<option value="${i}">${s.name}</option>`).join("");
   let h2 = 30, idx = 0;
@@ -133,14 +213,68 @@ function ask(q) {
   setTimeout(() => bubble("ai", a), 350);
 }
 
-/* ---------- Radar ---------- */
-function renderRadar() {
+/* ---------- Inventario · centro de inteligencia ---------- */
+function invRows() {
+  const q = ($("#inv-q").value || "").toLowerCase(), abc = $("#inv-abc").value, rk = $("#inv-risk").value;
+  return reps30()
+    .map(x => { const ideal = Math.ceil(x.r.demandH + x.r.safety);
+      const prio = x.r.status === "critical" ? "P0" : x.r.status === "risk" ? "P1" : x.r.status === "excess" ? "P1" : "P2";
+      const impact = x.r.status === "excess" ? x.s.stock * x.s.cost : x.r.lossRisk;
+      return { ...x, ideal, prio, impact }; })
+    .filter(x => (!q || x.s.name.toLowerCase().includes(q) || x.s.id.toLowerCase().includes(q)) && (!abc || x.s.abc === abc) && (!rk || x.r.status === rk))
+    .sort((a, b) => (a.prio < b.prio ? -1 : 1));
+}
+function renderInv() {
   const reps = reps30();
-  const li = (x, extra) => `<li><b style="color:var(--ink)">${x.s.name}</b> — ${extra}</li>`;
-  $("#radar-crit").innerHTML = reps.filter(x => ["critical", "risk"].includes(x.r.status)).map(x => li(x, `${x.r.daysCover.toFixed(1)}d cobertura · pide ${x.r.suggested}u`)).join("");
-  $("#radar-ex").innerHTML = reps.filter(x => x.r.status === "excess").map(x => li(x, `${PEN(x.s.stock * x.s.cost)} inmovilizados`)).join("");
-  const op = [...reps].filter(x => x.s.abc === "A" && x.r.status !== "critical").slice(0, 4);
-  $("#radar-op").innerHTML = op.map(x => li(x, `margen ${x.s.margin}% · +${(x.r.avgDaily * 30).toFixed(0)}u/mes`)).join("");
+  const deadVal = reps.filter(x => x.r.status === "excess").reduce((a, x) => a + x.s.stock * x.s.cost, 0);
+  const aVal = SKUS.filter(s => s.abc === "A").reduce((a, s) => a + s.stock * s.cost, 0);
+  $("#inv-kpis").innerHTML = [["Inventario valorizado", PEN(KPIS.inventoryVal), "14 SKUs"], ["Dinero inmovilizado", PEN(deadVal), "recuperable con promo"], ["Clase A (% valor)", Math.round(aVal / KPIS.inventoryVal * 100) + "%", "enfoque IA"]].map(x => `<div class="panel" style="padding:15px"><small class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">${x[0]}</small><b class="mono" style="display:block;font-size:20px;margin:5px 0 2px">${x[1]}</b><span class="muted" style="font-size:12.5px">${x[2]}</span></div>`).join("");
+  const badge = { critical: '<span class="badge b-crit">● Crítico</span>', risk: '<span class="badge b-risk">● En riesgo</span>', excess: '<span class="badge b-ex">◆ Exceso</span>', ok: '<span class="badge b-ok">✓ Saludable</span>' };
+  $("#inv-body").innerHTML = invRows().map(x => `<tr><td><b>${x.s.name}</b><br><span class="muted">${x.s.id} · ABC-${x.s.abc}/XYZ-${x.s.xyz}</span></td>
+    <td class="mono">${x.s.stock}u</td><td class="mono">${x.ideal}u</td><td class="mono">${x.r.daysCover.toFixed(1)}d</td>
+    <td>${badge[x.r.status]}</td><td class="mono">${PEN(x.impact)}</td><td><span class="prio ${x.prio.toLowerCase()}">${x.prio}</span></td>
+    <td>${x.r.suggested ? `<button class="btn btn-b btn-s" onclick="quickOC('${x.s.id}')">Comprar</button>` : `<span class="muted" style="font-size:12px">—</span>`}</td></tr>`).join("") || `<tr><td colspan="8" class="muted">Sin resultados para este filtro.</td></tr>`;
+}
+function exportInvCSV() {
+  const rows = [["SKU", "Producto", "Actual", "Ideal", "Dias", "Estado", "Impacto_PEN", "Prioridad"]];
+  invRows().forEach(x => rows.push([x.s.id, x.s.name, x.s.stock, x.ideal, x.r.daysCover.toFixed(1), x.r.status, Math.round(x.impact), x.prio]));
+  const blob = new Blob([rows.map(r => r.join(";")).join("\n")], { type: "text/csv" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "inventario_inteligencia.csv"; a.click();
+  audit("Exporta inventario a CSV (" + (rows.length - 1) + " filas)"); save(); toast("⬇ CSV descargado");
+}
+
+/* ---------- Compras · mesa de control ---------- */
+function renderBuyDesk() {
+  const reps = [...reps30()].sort((a, b) => b.r.lossRisk - a.r.lossRisk);
+  $("#buy-recs").innerHTML = reps.filter(x => x.r.suggested > 0).slice(0, 5).map((x, i) => `<div class="rule"><div><b>#${i + 1} · ${x.s.name} × ${x.r.suggested}u</b><p>${SUPPLIERS[x.s.supplier].name} · cobertura ${x.r.daysCover.toFixed(1)}d · protege ${PEN(x.r.lossRisk)} · inversión ${PEN(x.r.investment)}</p></div><button class="btn btn-b btn-s" style="margin-left:auto" onclick="quickOC('${x.s.id}')">Aprobar compra</button></div>`).join("");
+  // Comparar proveedores: top-3 por plan de inversión
+  const bySup = {};
+  reps.forEach(x => { bySup[x.s.supplier] = bySup[x.s.supplier] || { inv: 0, crit: 0 }; bySup[x.s.supplier].inv += x.r.investment; if (["critical", "risk"].includes(x.r.status)) bySup[x.s.supplier].crit++; });
+  const top = Object.entries(bySup).sort((a, b) => b[1].inv - a[1].inv).slice(0, 3);
+  $("#sup-compare").innerHTML = `<div class="tscroll"><table><thead><tr><th>Proveedor</th><th>Plan 30d</th><th>Lead</th><th>Score</th><th>Críticos</th></tr></thead><tbody>` +
+    top.map(([k, v]) => { const s = supplierScore(k); return `<tr><td><b>${s.sup.name}</b></td><td class="mono">${PEN(v.inv)}</td><td class="mono">${s.sup.leadTime}d</td><td><b class="mono">${s.score}</b> (${s.grade})</td><td>${v.crit ? `<span class="badge b-risk">${v.crit}</span>` : `<span class="badge b-ok">0</span>`}</td></tr>`; }).join("") + `</tbody></table></div>
+    <p class="muted" style="font-size:12.5px;margin:10px 0 0">✦ Negociación: ${SUPPLIERS[top[0][0]].discount} con ${SUPPLIERS[top[0][0]].name} por volumen de ${PEN(top[0][1].inv)}. Usa este número en tu próxima llamada.</p>`;
+  renderSim();
+}
+function renderSim() {
+  const d = +($("#sim-d").value || 30); $("#sim-d-lab").textContent = d + " días";
+  let inv = 0, mar = 0;
+  SKUS.forEach(s => { const r = replenishment(s, d); inv += r.investment; mar += Math.max(0, r.demandH - s.stock) * (s.price - s.cost); });
+  const cost = inv * 0.0145 * (d / 30);
+  $("#sim-inv").textContent = PEN(inv); $("#sim-mar").textContent = PEN(mar);
+  $("#sim-cost").textContent = PEN(cost); $("#sim-net").textContent = PEN(mar - cost);
+  $("#sim-net").style.color = mar - cost >= 0 ? "var(--ok)" : "var(--bad)";
+}
+
+/* ---------- Financiamiento · snapshot ---------- */
+function planInvestment() { return reps30().reduce((a, x) => a + x.r.investment, 0); }
+function syncFinNeed() { const r = $("#fin-range"); const plan = Math.round(planInvestment()); r.max = Math.max(200000, plan); r.value = Math.min(plan, +r.max); }
+function renderFinSnap() {
+  const reps = reps30();
+  const plan = reps.reduce((a, x) => a + x.r.investment, 0);
+  const prot = reps.reduce((a, x) => a + x.r.lossRisk, 0);
+  const frozenVal = reps.filter(x => x.r.status === "excess").reduce((a, x) => a + x.s.stock * x.s.cost, 0);
+  $("#fin-snap").innerHTML = [["Capital disponible (caja + muertos)", PEN(KPIS.savings + frozenVal * 0.15)], ["Crédito sugerido por IA", PEN(plan)], ["Costo financiero (1.45%×90d)", PEN(plan * 0.0435)], ["Retorno esperado", PEN(prot + KPIS.savings - plan * 0.0435)]].map(x => `<span><span class="muted">${x[0]}:</span> <b class="mono">${x[1]}</b></span>`).join("");
 }
 
 /* ---------- Reabastecimiento ---------- */
@@ -158,7 +292,7 @@ function quickOC(skuId) {
   const key = s.supplier, n = PURCHASE_ORDERS.length;
   const id = "OC-2026-" + (186 + n);
   PURCHASE_ORDERS.unshift({ id, supKey: key, supplier: SUPPLIERS[key].name, items: `${s.name} × ${r.suggested}`, total: Math.round(r.investment), status: "pending", eta: "Por definir", ai: `Sugerido por motor: ROP ${r.rop}u, cobertura ${r.daysCover.toFixed(1)}d.`, created: "2026-09-17", by: ME, hist: [{ t: "2026-09-17", e: "Creada desde Reabastecimiento por " + ME }] });
-  audit("Crea " + id + " (" + s.name + " × " + r.suggested + ")"); save(); renderOCs(); renderKPIs(); buildAlerts();
+  audit("Crea " + id + " (" + s.name + " × " + r.suggested + ")"); save(); renderOCs(); renderHome(); buildAlerts();
   toast("✓ " + id + " creada como borrador pendiente"); go("orders");
 }
 
@@ -182,10 +316,10 @@ function ocApprove(i, btn) {
   if (!needPerm("approve")) return;
   const o = PURCHASE_ORDERS[i];
   if (MFA && o.total > 10000 && armApprove !== o.id) { armApprove = o.id; renderOCs(); toast("🔐 MFA: confirma de nuevo para aprobar " + o.id); return; }
-  armApprove = null; o.status = "approved"; ocTouch(o, "Aprobada por " + ME + " (" + ROLE + ")"); audit("Aprueba " + o.id + " por " + PEN(o.total)); save(); renderOCs(); renderKPIs();
+  armApprove = null; o.status = "approved"; ocTouch(o, "Aprobada por " + ME + " (" + ROLE + ")"); audit("Aprueba " + o.id + " por " + PEN(o.total)); save(); renderOCs(); renderHome();
   toast("✓ " + o.id + " aprobada y enviada a " + o.supplier);
 }
-function ocReject(i) { if (!needPerm("approve")) return; const o = PURCHASE_ORDERS[i]; o.status = "rejected"; ocTouch(o, "Rechazada por " + ME); audit("Rechaza " + o.id); save(); renderOCs(); renderKPIs(); toast("✕ " + o.id + " rechazada"); }
+function ocReject(i) { if (!needPerm("approve")) return; const o = PURCHASE_ORDERS[i]; o.status = "rejected"; ocTouch(o, "Rechazada por " + ME); audit("Rechaza " + o.id); save(); renderOCs(); renderHome(); toast("✕ " + o.id + " rechazada"); }
 function ocReceive(i) { if (!needPerm("approve")) return; const o = PURCHASE_ORDERS[i]; o.status = "received"; ocTouch(o, "Marcada como recibida por " + ME); audit("Recibe " + o.id); save(); renderOCs(); toast("📦 " + o.id + " recibida. Stock actualizado en próximo sync."); }
 function openOCModal(id) {
   if (!needPerm(id ? "edit" : "create")) return;
@@ -217,7 +351,7 @@ function ocSave() {
   const items = lines.map(l => `${l.name} × ${l.qty}`).join(" · ");
   if (OCM_EDIT) { const o = PURCHASE_ORDERS.find(x => x.id === OCM_EDIT); Object.assign(o, { supKey: key, supplier: SUPPLIERS[key].name, items, lines, total, eta: $("#ocm-eta").value }); ocTouch(o, "Editada por " + ME); audit("Edita " + o.id); }
   else { const id = "OC-2026-" + (186 + PURCHASE_ORDERS.length); PURCHASE_ORDERS.unshift({ id, supKey: key, supplier: SUPPLIERS[key].name, items, lines, total, status: "pending", eta: $("#ocm-eta").value, ai: "Creada manualmente por " + ME + " con costos del maestro de productos.", created: "2026-09-17", by: ME, hist: [{ t: "2026-09-17", e: "Creada manualmente por " + ME }] }); audit("Crea " + id + " por " + PEN(total)); }
-  save(); closeModal("oc-modal"); renderOCs(); renderKPIs(); toast("✓ OC guardada como pendiente");
+  save(); closeModal("oc-modal"); renderOCs(); renderHome(); toast("✓ OC guardada como pendiente");
 }
 function ocPDF(i) {
   const o = PURCHASE_ORDERS[i];
@@ -272,7 +406,7 @@ function runAutomations(manual) {
   });
   if (R("R3").on) audit("R3 congela recompra de " + reps30().filter(x => x.r.status === "excess").length + " SKUs por 60 días");
   const n = new Date(); $("#auto-last").textContent = n.toLocaleDateString("es-PE") + " " + n.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }) + (created ? ` · ${created} borrador(es) creado(s)` : " · sin novedades");
-  save(); renderOCs(); renderKPIs(); buildAlerts(); renderAuto();
+  save(); renderOCs(); renderHome(); buildAlerts(); renderAuto();
   if (manual) toast(created ? `🤖 R1 generó ${created} borrador(es) de OC` : "🤖 Motor ejecutado: sin novedades");
 }
 function renderAuto() {
@@ -293,15 +427,7 @@ function renderFin() {
 }
 renderFin();
 
-/* ---------- Inventario ---------- */
-function renderInv() {
-  const reps = reps30();
-  const deadVal = reps.filter(x => x.r.status === "excess").reduce((a, x) => a + x.s.stock * x.s.cost, 0);
-  const aVal = SKUS.filter(s => s.abc === "A").reduce((a, s) => a + s.stock * s.cost, 0);
-  $("#inv-kpis").innerHTML = [["Inventario valorizado", PEN(KPIS.inventoryVal), "14 SKUs"], ["Dinero inmovilizado", PEN(deadVal), "3 SKUs muertos"], ["Clase A (% valor)", Math.round(aVal / KPIS.inventoryVal * 100) + "%", "enfoque IA"]].map(x => `<div class="panel" style="padding:15px"><small class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">${x[0]}</small><b class="mono" style="display:block;font-size:20px;margin:5px 0 2px">${x[1]}</b><span class="muted" style="font-size:12.5px">${x[2]}</span></div>`).join("");
-  const dg = (s, r) => r.status === "excess" ? '<span class="badge b-ex">◆ Muerto / exceso</span>' : r.status === "critical" ? '<span class="badge b-crit">● Reponer ya</span>' : r.status === "risk" ? '<span class="badge b-risk">● Vigilar</span>' : '<span class="badge b-ok">✓ Sano</span>';
-  $("#inv-body").innerHTML = SKUS.map(s => { const r = replenishment(s, 30); return `<tr><td><b>${s.name}</b><br><span class="muted">${s.id}</span></td><td>${s.cat}</td><td class="mono">${s.stock}u</td><td class="mono">${PEN(s.stock * s.cost)}</td><td><b>${s.abc}</b></td><td><b>${s.xyz}</b></td><td class="mono">${s.margin}%</td><td>${dg(s, r)}</td></tr>`; }).join("");
-}
+/* ---------- Inventario (render principal arriba: renderInv) ---------- */
 
 /* ---------- Analytics ---------- */
 function renderAnaKpis() {
@@ -336,7 +462,8 @@ function renderSettings() {
 
 /* ---------- Boot ---------- */
 load();
+$("#view-app").classList.add("mode-ops");
 $("#role-sel").value = ROLE;
 audit("Sesión iniciada (" + ROLE + ")");
-renderKPIs(); renderRadar(); renderRep(); renderOCs(); renderInv(); buildAlerts();
+renderHome(); renderRep(); renderOCs(); renderInv(); buildAlerts();
 document.addEventListener("click", e => { const d = $("#alert-drop"); if (d && d.classList.contains("open") && !e.target.closest(".bell-wrap")) d.classList.remove("open"); });

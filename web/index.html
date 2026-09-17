@@ -196,27 +196,57 @@
     </div>
     <div class="scrim" id="scrim" onclick="document.querySelector('.side').classList.remove('open');this.classList.remove('on')"></div>
 
-    <!-- DASHBOARD -->
+    <!-- HOME · inteligencia operacional -->
     <div class="page on" id="p-dashboard">
-      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Buenos días, Distribuidora San Martín ☀️</h2>
-      <p class="muted" style="margin:0 0 18px">Jueves 17 SEP 2026 · Lima · Esto es lo que tu cerebro de compras detectó hoy.</p>
-      <div class="kpi-grid" id="kpi-grid"></div>
-      <div class="cols2">
-        <div class="panel"><h3>🔮 Forecast de demanda · 30 días</h3><p class="sub2">Aceite Primor + Coca-Cola + Leche Gloria · confianza 94%</p>
-          <div class="tabs" id="fc-tabs"><button class="tab on" data-h="30">30d</button><button class="tab" data-h="60">60d</button><button class="tab" data-h="90">90d</button><button class="tab" data-h="180">180d</button></div>
-          <div class="chart-box"><canvas id="ch-forecast"></canvas></div></div>
-        <div class="panel"><h3>✦ IA Copilot</h3><p class="sub2">Pregunta en lenguaje natural. Cada respuesta viene justificada con datos.</p>
+      <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+        <div><h2 style="margin:0">Centro de operaciones · Distribuidora San Martín</h2>
+        <p class="muted" style="margin:4px 0 0">Jueves 17 SEP 2026 · Transformamos datos en decisiones de abastecimiento.</p></div>
+        <div class="seg" style="margin-left:auto"><button id="seg-exec" onclick="setMode('exec')">◈ Ejecutivo</button><button id="seg-ops" class="on" onclick="setMode('ops')">⚙ Operaciones</button></div>
+      </div>
+
+      <!-- BLOQUE 1 · Resumen ejecutivo -->
+      <div class="exec">
+        <div class="panel"><h3>🧠 Hoy debes comprar</h3><p class="sub2">Calculado por el motor · ROP + safety 95%</p><div class="exec-buy" id="exec-buy"></div></div>
+        <div class="panel"><h3>🔴 Riesgo detectado</h3><p class="sub2">Quiebres antes del lead time</p><div class="exec-num" id="exec-risk-n">—</div><p class="muted" style="font-size:13px;margin:0" id="exec-risk-t"></p></div>
+        <div class="panel"><h3>🟢 Oportunidad</h3><p class="sub2">Compra ahora y ahorra</p><div class="exec-num" id="exec-opp-n" style="color:var(--ok)">—</div><p class="muted" style="font-size:13px;margin:0" id="exec-opp-t"></p></div>
+      </div>
+
+      <div class="panel exec-only" style="margin-bottom:14px"><div style="display:flex;gap:26px;flex-wrap:wrap;font-size:13.5px" id="exec-snap"></div></div>
+
+      <!-- BLOQUE 2 · Centro de decisiones -->
+      <div class="dec">
+        <div class="dec-card dec-red" onclick="go('replenishment')"><small class="muted" style="font-weight:800">🔴 RIESGOS CRÍTICOS</small><b class="num" id="dec-red-n">—</b><ul id="dec-red-l"></ul><button class="btn btn-b btn-s">Abrir plan de compra →</button></div>
+        <div class="dec-card dec-yel" onclick="go('orders')"><small class="muted" style="font-weight:800">🟡 ATENCIÓN REQUERIDA</small><b class="num" id="dec-yel-n">—</b><ul id="dec-yel-l"></ul><button class="btn btn-g btn-s">Revisar OCs →</button></div>
+        <div class="dec-card dec-grn" onclick="go('financing')"><small class="muted" style="font-weight:800">🟢 OPORTUNIDADES</small><b class="num" id="dec-grn-n">—</b><ul id="dec-grn-l"></ul><button class="btn btn-g btn-s">Capturar valor →</button></div>
+      </div>
+
+      <div class="panel ops-only" style="margin-bottom:14px"><h3>⚡ Comprar ahora <span class="muted" style="font-weight:400;font-size:13px">· qué / cuánto / a quién</span></h3>
+        <div class="tscroll"><table><thead><tr><th>Qué</th><th>Cuánto</th><th>A quién</th><th>Cuándo</th><th></th></tr></thead><tbody id="opsbuy-body"></tbody></table></div></div>
+
+      <!-- BLOQUE 3+4 · Copiloto + Mapa -->
+      <div class="cols2" style="margin-bottom:14px">
+        <div class="panel"><h3>✦ Copiloto IA</h3><p class="sub2">Responde con datos calculados del motor, nunca inventados.</p>
           <div class="chat" id="chat"></div>
           <div class="chips">
-            <button class="chip" onclick="ask('¿Qué debo comprar esta semana?')">¿Qué debo comprar?</button>
-            <button class="chip" onclick="ask('¿Qué SKU corre riesgo?')">¿SKU en riesgo?</button>
-            <button class="chip" onclick="ask('¿Dónde tengo dinero inmovilizado?')">¿Dinero inmovilizado?</button>
+            <button class="chip" onclick="ask('¿Qué debo comprar esta semana?')">¿Qué compro?</button>
+            <button class="chip" onclick="ask('¿Dónde tengo dinero inmovilizado?')">¿Capital inmovilizado?</button>
+            <button class="chip" onclick="ask('¿Qué proveedores tienen retrasos?')">¿Retrasos?</button>
+            <button class="chip" onclick="ask('¿Cuánto dinero perderé si no compro hoy?')">¿Pérdida hoy?</button>
           </div>
-          <div class="chat-in"><input id="chat-in" placeholder="Ej. ¿Cuánto perderé si no compro hoy?" onkeydown="if(event.key==='Enter')ask(this.value)"><button class="btn btn-b" onclick="ask(document.getElementById('chat-in').value)">➤</button></div>
+          <div class="chat-in"><input id="chat-in" placeholder="Pregunta operativa…" onkeydown="if(event.key==='Enter')ask(this.value)"><button class="btn btn-b" onclick="ask(document.getElementById('chat-in').value)">➤</button></div>
         </div>
+        <div class="panel"><h3>🗺️ Mapa de abastecimiento</h3><p class="sub2">Plantas → CD Lima → sucursales · clic en un nodo para detalle</p>
+          <div class="map-wrap" style="grid-template-columns:1fr"><svg class="map-svg" id="supmap" viewBox="0 0 640 370"></svg><div class="map-detail" id="map-detail"></div></div></div>
       </div>
-      <div class="panel" style="margin-top:14px"><h3>🎯 Radar de riesgo</h3><p class="sub2">Rojo = quiebre inminente · Violeta = exceso / muerto · Verde = oportunidad de compra con margen</p>
-        <div class="radar"><div class="col r-crit"><b>🔴 Quiebre inminente</b><ul id="radar-crit"></ul></div><div class="col r-ex"><b>🟣 Exceso / muerto</b><ul id="radar-ex"></ul></div><div class="col r-op"><b>🟢 Oportunidad</b><ul id="radar-op"></ul></div></div></div>
+
+      <!-- BLOQUE 5 · Predicciones -->
+      <div class="panel"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h3 style="margin:0">📈 Predicciones con intervalos</h3>
+        <div class="tabs" style="margin:0 0 0 auto" id="fc-tabs"><button class="tab on" data-h="30">30d</button><button class="tab" data-h="60">60d</button><button class="tab" data-h="90">90d</button><button class="tab" data-h="180">180d</button></div></div>
+        <p class="sub2">Demanda agregada top-3 SKUs · banda p10–p90 · variables explicativas auditables</p>
+        <div class="chart-box"><canvas id="ch-forecast"></canvas></div>
+        <div class="band-legend"><span><i style="background:rgba(27,59,255,.25)"></i>Banda p10–p90</span><span><i style="background:var(--primary)"></i>Forecast</span><span><i style="background:#93A0BC"></i>Histórico</span></div>
+        <div class="vars" id="pred-vars"></div>
+      </div>
     </div>
 
     <!-- FORECAST -->
@@ -239,6 +269,14 @@
     <div class="page" id="p-orders">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px"><h2 style="margin:0;letter-spacing:-.03em">Órdenes de compra 🧾</h2><button class="btn btn-b btn-s" style="margin-left:auto" onclick="openOCModal()">+ Nueva OC</button></div>
       <p class="muted" style="margin:0 0 18px">Creadas por ti o por la IA · aprueba en 1 clic · PDF, email y WhatsApp reales</p>
+      <div class="panel" style="margin-bottom:14px"><h3>🎯 Recomendaciones IA <span class="muted" style="font-weight:400;font-size:13px">· ordenadas por pérdida evitada</span></h3><div id="buy-recs"></div></div>
+      <div class="grid2" style="margin-bottom:14px">
+        <div class="panel"><h3>⚖️ Comparar proveedores</h3><p class="sub2">Para tu mayor plan de compra 30d: elige con números, no con costumbre.</p><div id="sup-compare"></div></div>
+        <div class="panel"><h3>🧮 Simulador financiero</h3><p class="sub2">¿Y si cubres más días? Inversión vs margen protegido vs costo financiero.</p>
+          <div class="field"><label>Cobertura objetivo: <b id="sim-d-lab">30 días</b></label><input type="range" id="sim-d" min="15" max="90" step="5" value="30" style="width:100%" oninput="renderSim()"></div>
+          <div class="sim-grid"><div><small>Inversión</small><b class="mono" id="sim-inv">—</b></div><div><small>Margen protegido</small><b class="mono" id="sim-mar">—</b></div><div><small>Costo financ. 1.45%</small><b class="mono" id="sim-cost">—</b></div><div><small>Neto</small><b class="mono" id="sim-net" style="color:var(--ok)">—</b></div></div>
+        </div>
+      </div>
       <div id="oc-list"></div>
     </div>
 
@@ -246,6 +284,7 @@
     <div class="page" id="p-financing">
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">Financiamiento inteligente 💳</h2>
       <p class="muted" style="margin:0 0 18px">Marketplace: bancos + fintechs + fondos · la IA ordena por costo total vs tu ciclo de inventario</p>
+      <div class="panel" style="margin-bottom:14px"><div style="display:flex;gap:26px;flex-wrap:wrap;font-size:13.5px" id="fin-snap"></div></div>
       <div class="panel" style="margin-bottom:14px"><h3>🧮 Simulador</h3><p class="sub2">Necesidad total de compra 30d: <b class="mono" id="fin-need"></b></p>
         <input type="range" id="fin-range" min="10000" max="200000" step="5000" value="60000" style="width:100%" oninput="renderFin()"></div>
       <div id="fin-list"></div>
@@ -253,10 +292,11 @@
 
     <!-- INVENTORY -->
     <div class="page" id="p-inventory">
-      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Inventario en tiempo real 📦</h2>
-      <p class="muted" style="margin:0 0 18px">ABC × XYZ · rotación · margen · dinero inmovilizado</p>
+      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Inventario · centro de inteligencia 📦</h2>
+      <p class="muted" style="margin:0 0 18px">Stock actual vs ideal · días restantes · riesgo · impacto financiero · prioridad — todo accionable</p>
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)" id="inv-kpis"></div>
-      <div class="panel"><div class="tscroll"><table><thead><tr><th>SKU</th><th>Categoría</th><th>Stock</th><th>Valorizado</th><th>ABC</th><th>XYZ</th><th>Margen</th><th>Diagnóstico</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
+      <div class="panel"><div class="toolbar"><input id="inv-q" placeholder="⌕ Buscar SKU…" oninput="renderInv()"><select id="inv-abc" onchange="renderInv()"><option value="">ABC: todas</option><option>A</option><option>B</option><option>C</option></select><select id="inv-risk" onchange="renderInv()"><option value="">Riesgo: todos</option><option value="critical">Crítico</option><option value="risk">En riesgo</option><option value="excess">Exceso</option><option value="ok">Saludable</option></select><button class="btn btn-g btn-s" style="margin-left:auto" onclick="exportInvCSV()">⬇ Exportar CSV</button></div>
+      <div class="tscroll"><table><thead><tr><th>SKU</th><th>Actual</th><th>Ideal</th><th>Días</th><th>Riesgo</th><th>Impacto S/</th><th>Prioridad</th><th></th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
     </div>
 
     <!-- ANALYTICS -->

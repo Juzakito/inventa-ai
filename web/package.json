@@ -5,7 +5,7 @@
   "description": "INVENTA.AI — frontend estático (cero dependencias runtime)",
   "scripts": {
     "lint": "htmlhint index.html && node --check data.js && node --check app.js",
-    "test": "node --check data.js && node --check app.js && python ../ai-engine/test_smoke.py",
+    "test": "node --check data.js && node --check app.js && node scripts/engine-check.js && node scripts/audit-ids.js && python ../ai-engine/test_smoke.py",
     "build": "node scripts/validate-build.js",
     "serve": "python -m http.server 5173"
   },

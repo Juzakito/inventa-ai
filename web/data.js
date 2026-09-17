@@ -113,7 +113,35 @@ let PURCHASE_ORDERS = [
   { id: "OC-2026-182", supKey: "MOLITALIA", supplier: "Molitalia", items: "Don Vittorio × 1,200", total: 3480, status: "received", eta: "Recibida", ai: "Lead time real 5.2d vs 5d pactado. OTIF 96%.", created: "2026-09-12", by: "S. Martín", hist: [{ t: "2026-09-12 10:20", e: "Generada por IA Copilot" }, { t: "2026-09-12 11:05", e: "Aprobada por S. Martín" }, { t: "2026-09-14 16:44", e: "Marcada como recibida" }] },
 ];
 
-// Reglas de automatización (motor real: se ejecutan en runAutomations())
+// Red de abastecimiento (esquemática): plantas → CD Lima → sucursales.
+// El estado (en tránsito, riesgo) se calcula desde OCs aprobadas y SKUs críticos.
+const NETWORK = {
+  nodes: [
+    { id: "ALICORP", label: "Alicorp · Planta Lima", type: "plant", x: 90, y: 70 },
+    { id: "GLORIA", label: "Gloria · Planta Huachipa", type: "plant", x: 90, y: 150 },
+    { id: "BACKUS", label: "Backus · Planta Ate", type: "plant", x: 90, y: 230 },
+    { id: "MOLITALIA", label: "Molitalia · Planta Ventanilla", type: "plant", x: 90, y: 310 },
+    { id: "CD", label: "CD Lima · La Victoria", type: "dc", x: 330, y: 190 },
+    { id: "B1", label: "Sucursal Trujillo", type: "branch", x: 540, y: 90 },
+    { id: "B2", label: "Sucursal Arequipa", type: "branch", x: 540, y: 290 },
+  ],
+  edges: [
+    { from: "ALICORP", to: "CD" }, { from: "GLORIA", to: "CD" },
+    { from: "BACKUS", to: "CD" }, { from: "MOLITALIA", to: "CD" },
+    { from: "CD", to: "B1" }, { from: "CD", to: "B2" },
+  ],
+};
+
+// Bandas de confianza del forecast: p10/p90 con sigma creciente en el tiempo.
+// sigma(día i) = avgDaily · CV · √i  →  banda = qty ± 1.28σ
+function forecastBands(sku, horizon = 30) {
+  const fc = forecastFor(sku, horizon);
+  const avg = fc.reduce((a, b) => a + b.qty, 0) / horizon;
+  return fc.map((p, i) => {
+    const s = avg * sku.cv * Math.sqrt(i + 1) * 1.28;
+    return { ...p, lo: Math.max(0, Math.round(p.qty - s)), hi: Math.round(p.qty + s) };
+  });
+}
 let AUTO_RULES = [
   { id: "R1", name: "Borrador automático de OC ante stock crítico", desc: "Si un SKU cae bajo el 60% del ROP y no tiene OC pendiente, genera un borrador.", on: true },
   { id: "R2", name: "Alerta de quiebre al dueño", desc: "Notifica cuando la cobertura de un clase A baja del lead time.", on: true },
