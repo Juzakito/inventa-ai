@@ -15,7 +15,7 @@ for (const [f, base] of files) {
   console.log("OK  " + f + "  " + (s.size / 1024).toFixed(1) + " KB");
 }
 const html = fs.readFileSync(path.join(web, "index.html"), "utf8");
-for (const id of ["p-dashboard", "p-forecast", "p-replenishment", "p-orders", "p-financing", "p-inventory", "p-suppliers", "p-analytics", "p-integrations", "p-auto", "p-settings", "oc-modal", "demo-modal"]) {
+for (const id of ["p-dashboard", "p-forecast", "p-replenishment", "p-orders", "p-financing", "p-inventory", "p-suppliers", "p-analytics", "p-integrations", "p-auto", "p-settings", "oc-modal", "demo-modal", "sku-modal", "ak-cap", "sp-cap", "ch-cat", "heat-table", "inv-cat", "inv-sup", "ana-period"]) {
   if (!html.includes(id)) { console.error("FALTA vista: " + id); fail = true; }
 }
 console.log("Peso total web: " + (bytes / 1024).toFixed(1) + " KB");

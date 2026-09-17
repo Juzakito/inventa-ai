@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0] — 2026-09-17 — Lenguaje visual de los mockups
+- Sidebar navy permanente + fondo claro premium; pills de estado Óptimo/Bajo/Crítico.
+- Analytics estilo mockup 3: 3 KPI cards con sparklines (trailing reconstruido día a día desde el historial: stock(d) = stock + vendido), forecast-vs-real mensual 12M (6 reales + 6 IA), barras por categoría, donut por categoría, heatmap de cobertura SKU×categoría, filtro de período funcional (30/90/180).
+- Inventario estilo mockup 2: columnas SKU/producto/categoría/stock/mínimo/estado/proveedor/último reabastecimiento (derivado de OCs reales) + filtros categoría/estado/proveedor + **Nuevo Producto** (entra al maestro, al forecast y persiste).
+- CI: build valida los 21 IDs críticos.
+
 ## [1.2.0] — 2026-09-17 — Plataforma de inteligencia operacional
 - Home destruido y reconstruido: Resumen ejecutivo (qué comprar/riesgo/oportunidad calculados), Centro de decisiones (3 tarjetas → workflows), Copiloto, Mapa de abastecimiento SVG interactivo (plantas→CD→sucursales, clic por nodo), Predicciones con bandas p10–p90 + variables explicativas.
 - Forecast agregado top-3 + intervalos de confianza (forecastBands: σ√t).

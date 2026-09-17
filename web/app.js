@@ -213,35 +213,65 @@ function ask(q) {
   setTimeout(() => bubble("ai", a), 350);
 }
 
-/* ---------- Inventario · centro de inteligencia ---------- */
+/* ---------- Inventario · centro de inteligencia (mockup 2) ---------- */
+function lastRestock(s) {
+  const hit = PURCHASE_ORDERS.find(o => o.items.toLowerCase().includes(s.name.slice(0, 14).toLowerCase()));
+  return hit ? hit.created || "—" : "—";
+}
+function invStatePill(st) {
+  return st === "ok" ? '<span class="state-pill st-ok">Óptimo</span>' : st === "risk" ? '<span class="state-pill st-low">Bajo</span>' : st === "critical" ? '<span class="state-pill st-crit">Crítico</span>' : '<span class="state-pill st-low">Sobrestock</span>';
+}
 function invRows() {
-  const q = ($("#inv-q").value || "").toLowerCase(), abc = $("#inv-abc").value, rk = $("#inv-risk").value;
+  const q = ($("#inv-q").value || "").toLowerCase(), cat = $("#inv-cat").value, rk = $("#inv-risk").value, sup = $("#inv-sup").value;
+  const rkMap = { ok: "ok", risk: "risk", critical: "critical", excess: "excess" };
   return reps30()
-    .map(x => { const ideal = Math.ceil(x.r.demandH + x.r.safety);
-      const prio = x.r.status === "critical" ? "P0" : x.r.status === "risk" ? "P1" : x.r.status === "excess" ? "P1" : "P2";
-      const impact = x.r.status === "excess" ? x.s.stock * x.s.cost : x.r.lossRisk;
-      return { ...x, ideal, prio, impact }; })
-    .filter(x => (!q || x.s.name.toLowerCase().includes(q) || x.s.id.toLowerCase().includes(q)) && (!abc || x.s.abc === abc) && (!rk || x.r.status === rk))
-    .sort((a, b) => (a.prio < b.prio ? -1 : 1));
+    .map(x => ({ ...x }))
+    .filter(x => (!q || x.s.name.toLowerCase().includes(q) || x.s.id.toLowerCase().includes(q) || SUPPLIERS[x.s.supplier].name.toLowerCase().includes(q)) && (!cat || x.s.cat === cat) && (!rk || x.r.status === rkMap[rk]) && (!sup || x.s.supplier === sup))
+    .sort((a, b) => a.r.daysCover - b.r.daysCover);
+}
+function fillInvFilters() {
+  const cats = [...new Set(SKUS.map(s => s.cat))];
+  $("#inv-cat").innerHTML = `<option value="">Categoría: todas</option>` + cats.map(c => `<option>${c}</option>`).join("");
+  $("#inv-sup").innerHTML = `<option value="">Proveedor: todos</option>` + Object.keys(SUPPLIERS).map(k => `<option value="${k}">${SUPPLIERS[k].name}</option>`).join("");
 }
 function renderInv() {
+  if (!$("#inv-cat").options.length || $("#inv-cat").options.length <= 1) fillInvFilters();
   const reps = reps30();
   const deadVal = reps.filter(x => x.r.status === "excess").reduce((a, x) => a + x.s.stock * x.s.cost, 0);
   const aVal = SKUS.filter(s => s.abc === "A").reduce((a, s) => a + s.stock * s.cost, 0);
-  $("#inv-kpis").innerHTML = [["Inventario valorizado", PEN(KPIS.inventoryVal), "14 SKUs"], ["Dinero inmovilizado", PEN(deadVal), "recuperable con promo"], ["Clase A (% valor)", Math.round(aVal / KPIS.inventoryVal * 100) + "%", "enfoque IA"]].map(x => `<div class="panel" style="padding:15px"><small class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">${x[0]}</small><b class="mono" style="display:block;font-size:20px;margin:5px 0 2px">${x[1]}</b><span class="muted" style="font-size:12.5px">${x[2]}</span></div>`).join("");
-  const badge = { critical: '<span class="badge b-crit">● Crítico</span>', risk: '<span class="badge b-risk">● En riesgo</span>', excess: '<span class="badge b-ex">◆ Exceso</span>', ok: '<span class="badge b-ok">✓ Saludable</span>' };
-  $("#inv-body").innerHTML = invRows().map(x => `<tr><td><b>${x.s.name}</b><br><span class="muted">${x.s.id} · ABC-${x.s.abc}/XYZ-${x.s.xyz}</span></td>
-    <td class="mono">${x.s.stock}u</td><td class="mono">${x.ideal}u</td><td class="mono">${x.r.daysCover.toFixed(1)}d</td>
-    <td>${badge[x.r.status]}</td><td class="mono">${PEN(x.impact)}</td><td><span class="prio ${x.prio.toLowerCase()}">${x.prio}</span></td>
-    <td>${x.r.suggested ? `<button class="btn btn-b btn-s" onclick="quickOC('${x.s.id}')">Comprar</button>` : `<span class="muted" style="font-size:12px">—</span>`}</td></tr>`).join("") || `<tr><td colspan="8" class="muted">Sin resultados para este filtro.</td></tr>`;
+  $("#inv-kpis").innerHTML = [["Inventario valorizado", PEN(KPIS.inventoryVal), SKUS.length + " SKUs"], ["Dinero inmovilizado", PEN(deadVal), "recuperable con promo"], ["Clase A (% valor)", Math.round(aVal / KPIS.inventoryVal * 100) + "%", "enfoque IA"]].map(x => `<div class="panel" style="padding:15px"><small class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">${x[0]}</small><b class="mono" style="display:block;font-size:20px;margin:5px 0 2px">${x[1]}</b><span class="muted" style="font-size:12.5px">${x[2]}</span></div>`).join("");
+  $("#inv-body").innerHTML = invRows().map(x => `<tr><td class="mono">${x.s.id}</td><td><b>${x.s.name}</b></td><td>${x.s.cat}</td>
+    <td class="mono">${x.s.stock}</td><td class="mono">${x.s.min}</td><td>${invStatePill(x.r.status)}</td>
+    <td>${SUPPLIERS[x.s.supplier].name}</td><td class="mono" style="font-size:12.5px">${lastRestock(x.s)}</td>
+    <td>${x.r.suggested ? `<button class="btn btn-b btn-s" onclick="quickOC('${x.s.id}')">Comprar</button>` : `<span class="muted" style="font-size:12px">—</span>`}</td></tr>`).join("") || `<tr><td colspan="9" class="muted">Sin resultados para este filtro.</td></tr>`;
 }
 function exportInvCSV() {
-  const rows = [["SKU", "Producto", "Actual", "Ideal", "Dias", "Estado", "Impacto_PEN", "Prioridad"]];
-  invRows().forEach(x => rows.push([x.s.id, x.s.name, x.s.stock, x.ideal, x.r.daysCover.toFixed(1), x.r.status, Math.round(x.impact), x.prio]));
+  const rows = [["SKU", "Producto", "Categoria", "Actual", "Minimo", "Estado", "Proveedor", "Ultimo_Reabastecimiento"]];
+  invRows().forEach(x => rows.push([x.s.id, x.s.name, x.s.cat, x.s.stock, x.s.min, x.r.status, SUPPLIERS[x.s.supplier].name, lastRestock(x.s)]));
   const blob = new Blob([rows.map(r => r.join(";")).join("\n")], { type: "text/csv" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "inventario_inteligencia.csv"; a.click();
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "inventario_productos.csv"; a.click();
   audit("Exporta inventario a CSV (" + (rows.length - 1) + " filas)"); save(); toast("⬇ CSV descargado");
 }
+/* ---------- Nuevo Producto (real: entra al motor) ---------- */
+function openSkuModal() {
+  if (!needPerm("create")) return;
+  $("#sku-cat").innerHTML = [...new Set(SKUS.map(s => s.cat))].map(c => `<option>${c}</option>`).join("");
+  $("#sku-sup").innerHTML = Object.keys(SUPPLIERS).map(k => `<option value="${k}">${SUPPLIERS[k].name}</option>`).join("");
+  $("#sku-modal").classList.add("open");
+}
+function skuSave() {
+  const name = $("#sku-name").value.trim();
+  const cost = +$("#sku-cost").value || 0, price = +$("#sku-price").value || 0;
+  const stock = +$("#sku-stock").value || 0, min = +$("#sku-min").value || 0, daily = +$("#sku-daily").value || 1;
+  if (!name || cost <= 0 || price <= 0) { toast("⚠️ Completa nombre, costo y precio válidos"); return; }
+  const n = SKUS.length + 1;
+  const sku = { id: "SKU-" + String(100 + n).padStart(3, "0"), name, cat: $("#sku-cat").value, supplier: $("#sku-sup").value, price, cost, stock, min, max: Math.max(min * 3, stock), lead: SUPPLIERS[$("#sku-sup").value].leadTime, daily, cv: 0.3, margin: Math.round((1 - cost / price) * 100), abc: "B", xyz: "Y", dead: false };
+  SKUS.push(sku);
+  try { const c = JSON.parse(localStorage.getItem("inventa_skus") || "[]"); c.push(sku); localStorage.setItem("inventa_skus", JSON.stringify(c)); } catch (e) {}
+  audit("Crea producto " + sku.id + " (" + name + ")"); save(); closeModal("sku-modal"); fillInvFilters(); renderInv(); buildAlerts();
+  toast("✓ " + name + " creado y ya alimenta el forecast");
+}
+function loadCustomSkus() { try { (JSON.parse(localStorage.getItem("inventa_skus") || "[]")).forEach(s => { if (!SKUS.some(x => x.id === s.id)) SKUS.push(s); }); } catch (e) {} }
 
 /* ---------- Compras · mesa de control ---------- */
 function renderBuyDesk() {
@@ -429,19 +459,77 @@ renderFin();
 
 /* ---------- Inventario (render principal arriba: renderInv) ---------- */
 
-/* ---------- Analytics ---------- */
-function renderAnaKpis() {
-  const k = KPIS;
-  $("#ana-kpis").innerHTML = [["GMROI", k.gmroi + "×", "por sol invertido"], ["Fill Rate", k.fillRate + "%", "meta 98%"], ["Sell-Through", k.sellThrough + "%", "30 días"], ["OTIF", k.otif + "%", "on-time in-full"], ["Nivel servicio", k.service + "%", "95% objetivo"], ["Riesgo quiebre", k.breakRisk + "%", "5 SKUs"]].map(x => `<div class="panel" style="padding:15px"><small class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">${x[0]}</small><b class="mono" style="display:block;font-size:20px;margin:5px 0 2px">${x[1]}</b><span style="font-size:12px" class="muted">${x[2]}</span></div>`).join("");
+/* ---------- Analytics (estilo mockup: sparklines + forecast vs real + heatmap) ---------- */
+// Reconstruye el estado "as-of" de cada día: stock(d) = stock hoy + vendido desde d.
+// Todo el trailing es calculado, nada hardcodeado.
+function kpiTrail(n = 30) {
+  const base = SKUS.map(s => ({ s, r: replenishment(s, 30), h: historyFor(s, 180) }));
+  const risk = [], eff = [], cap = [];
+  for (let d = n - 1; d >= 0; d--) {
+    let crit = 0, ok = 0, frozen = 0;
+    base.forEach(({ s, r, h }) => {
+      const sold = d === 0 ? 0 : h.slice(-d).reduce((a, x) => a + x.qty, 0);
+      const st = s.stock + sold;
+      const isCrit = st <= r.rop * 0.6, isRisk = st <= r.rop, isExc = st > s.max * 1.15;
+      if (isCrit || isRisk) crit++;
+      if (!isCrit && !isRisk && !isExc) ok++;
+      if (isExc) frozen += st * s.cost;
+    });
+    risk.push(crit); eff.push(Math.round(ok / SKUS.length * 100)); cap.push(Math.round(frozen));
+  }
+  return { risk, eff, cap };
 }
-function drawAnalytics() {
-  renderAnaKpis();
-  if (CH.ana1) { CH.ana1.update(); CH.ana2.update(); return; }
-  const h = historyFor(SKUS[0], 90); const f = forecastFor(SKUS[0], 30);
-  const o1 = chartBase(); o1.scales.x.ticks.maxTicksLimit = 10;
-  CH.ana1 = new Chart($("#ch-ana1"), { type: "bar", data: { labels: h.slice(-30).map(x => x.date.slice(5)), datasets: [{ label: "Ventas reales", data: h.slice(-30).map(x => x.qty), backgroundColor: "rgba(27,59,255,.75)", borderRadius: 4 }, { label: "Forecast", data: [...Array(23).fill(null), ...f.slice(0, 7).map(x => x.qty)], type: "line", borderColor: "#00C2FF", pointRadius: 0, tension: .4 }] }, options: o1 });
+function spark(id, data, color) {
+  const el = document.getElementById(id); if (!el) return;
+  if (CH[id]) CH[id].destroy();
+  CH[id] = new Chart(el, { type: "line", data: { labels: data.map((_, i) => i), datasets: [{ data, borderColor: color, backgroundColor: color + "22", fill: true, pointRadius: 0, tension: .45, borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, animation: false } });
+}
+function monthLabel(key) { const [y, m] = key.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("es-PE", { month: "short", year: "2-digit" }); }
+function monthlyActual() {
+  const top = [...SKUS].sort((a, b) => b.daily - a.daily).slice(0, 3);
+  const buckets = {};
+  top.forEach(s => historyFor(s, 180).forEach(p => { buckets[p.date.slice(0, 7)] = (buckets[p.date.slice(0, 7)] || 0) + p.qty; }));
+  return Object.keys(buckets).sort().slice(-6).map(k => ({ k, v: buckets[k] }));
+}
+function monthlyForecast() {
+  const top = [...SKUS].sort((a, b) => b.daily - a.daily).slice(0, 3);
+  const per = {};
+  top.forEach(s => forecastFor(s, 180).forEach(p => { per[p.date.slice(0, 7)] = (per[p.date.slice(0, 7)] || 0) + p.qty; }));
+  return Object.keys(per).sort().slice(0, 6).map(k => ({ k, v: per[k] }));
+}
+function drawAnalytics(force) {
+  const period = +($("#ana-period").value || 90);
+  const trail = kpiTrail(Math.min(period, 90));
+  $("#ak-cap").textContent = PEN(trail.cap[trail.cap.length - 1]);
+  $("#ak-eff").textContent = trail.eff[trail.eff.length - 1] + "%";
+  $("#ak-risk").textContent = trail.risk[trail.risk.length - 1];
+  spark("sp-cap", trail.cap, "#1B3BFF"); spark("sp-eff", trail.eff, "#7C5CFF"); spark("sp-risk", trail.risk, "#E8930C");
+  const A = monthlyActual(), F = monthlyForecast();
+  const labels = [...A.map(x => monthLabel(x.k)), ...F.map(x => monthLabel(x.k))];
+  const actual = [...A.map(x => x.v), ...Array(F.length).fill(null)];
+  const fc = [...Array(A.length - 1).fill(null), A[A.length - 1].v, ...F.map(x => x.v)];
+  ["ch-ana1", "ch-cat", "ch-ana2"].forEach(k => { if (CH[k]) { CH[k].destroy(); delete CH[k]; } });
+  const o = chartBase(); o.scales.x.ticks.maxTicksLimit = 12;
+  CH["ch-ana1"] = new Chart($("#ch-ana1"), { type: "line",
+    data: { labels, datasets: [
+      { label: "Demanda real", data: actual, borderColor: "#1B3BFF", backgroundColor: "rgba(27,59,255,.18)", fill: true, pointRadius: 0, tension: .4, borderWidth: 2.5 },
+      { label: "Predicción IA", data: fc, borderColor: "#0B1023", borderDash: [5, 4], pointRadius: 0, tension: .4, borderWidth: 2 }] }, options: o });
+  const cats = [...new Set(SKUS.map(s => s.cat))];
+  const catVal = cats.map(c => SKUS.filter(s => s.cat === c).reduce((a, s) => a + s.stock * s.cost, 0));
+  const oc = chartBase(); oc.plugins.legend.display = false;
+  CH["ch-cat"] = new Chart($("#ch-cat"), { type: "bar",
+    data: { labels: cats.map(c => c.split(" ")[0]), datasets: [{ data: catVal, backgroundColor: ["#1B3BFF", "#7C5CFF", "#4D6BFF", "#00C2FF", "#5B7CFF", "#9AA8FF"], borderRadius: 7 }] },
+    options: { ...oc, plugins: { ...oc.plugins, tooltip: { callbacks: { label: c => " " + PEN(c.parsed.y) } } } } });
   const o2 = chartBase(); delete o2.scales; o2.plugins.legend.position = "bottom"; o2.plugins.legend.align = "center";
-  CH.ana2 = new Chart($("#ch-ana2"), { type: "doughnut", data: { labels: ["Clase A (80% valor)", "Clase B (15%)", "Clase C (5%)"], datasets: [{ data: [80, 15, 5], backgroundColor: ["#1B3BFF", "#7C5CFF", "#00C2FF"], borderWidth: 0 }] }, options: o2 });
+  CH["ch-ana2"] = new Chart($("#ch-ana2"), { type: "doughnut",
+    data: { labels: cats, datasets: [{ data: catVal, backgroundColor: ["#1B3BFF", "#7C5CFF", "#00C2FF", "#4D6BFF", "#5B7CFF", "#9AA8FF"], borderWidth: 2 }] },
+    options: { ...o2, plugins: { ...o2.plugins, tooltip: { callbacks: { label: c => " " + c.label + ": " + PEN(c.parsed) } } } } });
+  const rows = [...reps30()].sort((a, b) => b.r.daysCover - a.r.daysCover).slice(0, 10);
+  const cellCls = x => x.r.status === "critical" ? "h4" : x.r.status === "risk" ? "h3" : x.r.status === "excess" ? "h2" : (x.r.daysCover > 45 ? "h1" : "h0");
+  $("#heat-table").innerHTML = `<tr><th>SKU</th>${cats.map(c => `<th>${c.split(" ")[0]}</th>`).join("")}</tr>` +
+    rows.map(x => `<tr><td style="text-align:left;font-weight:700;color:var(--ink);background:none;min-width:90px">${x.s.id}</td>` +
+      cats.map(c => c === x.s.cat ? `<td class="${cellCls(x)}">${x.r.daysCover.toFixed(0)}d</td>` : `<td class="h0" style="opacity:.35">—</td>`).join("") + `</tr>`).join("");
 }
 
 /* ---------- Integraciones ---------- */
@@ -462,6 +550,7 @@ function renderSettings() {
 
 /* ---------- Boot ---------- */
 load();
+loadCustomSkus();
 $("#view-app").classList.add("mode-ops");
 $("#role-sel").value = ROLE;
 audit("Sesión iniciada (" + ROLE + ")");

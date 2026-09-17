@@ -295,17 +295,37 @@
       <h2 style="margin:0 0 4px;letter-spacing:-.03em">Inventario · centro de inteligencia 📦</h2>
       <p class="muted" style="margin:0 0 18px">Stock actual vs ideal · días restantes · riesgo · impacto financiero · prioridad — todo accionable</p>
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)" id="inv-kpis"></div>
-      <div class="panel"><div class="toolbar"><input id="inv-q" placeholder="⌕ Buscar SKU…" oninput="renderInv()"><select id="inv-abc" onchange="renderInv()"><option value="">ABC: todas</option><option>A</option><option>B</option><option>C</option></select><select id="inv-risk" onchange="renderInv()"><option value="">Riesgo: todos</option><option value="critical">Crítico</option><option value="risk">En riesgo</option><option value="excess">Exceso</option><option value="ok">Saludable</option></select><button class="btn btn-g btn-s" style="margin-left:auto" onclick="exportInvCSV()">⬇ Exportar CSV</button></div>
-      <div class="tscroll"><table><thead><tr><th>SKU</th><th>Actual</th><th>Ideal</th><th>Días</th><th>Riesgo</th><th>Impacto S/</th><th>Prioridad</th><th></th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
+      <div class="panel"><div class="toolbar"><input id="inv-q" placeholder="⌕ Buscar productos, SKUs, proveedores…" oninput="renderInv()"><select id="inv-cat" onchange="renderInv()"><option value="">Categoría: todas</option></select><select id="inv-risk" onchange="renderInv()"><option value="">Estado: todos</option><option value="ok">Óptimo</option><option value="risk">Bajo</option><option value="critical">Crítico</option><option value="excess">Exceso</option></select><select id="inv-sup" onchange="renderInv()"><option value="">Proveedor: todos</option></select><button class="btn btn-b btn-s" onclick="openSkuModal()">+ Nuevo Producto</button><button class="btn btn-g btn-s" style="margin-left:auto" onclick="exportInvCSV()">⬇ Exportar</button></div>
+      <div class="tscroll"><table><thead><tr><th>SKU</th><th>Producto</th><th>Categoría</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Estado</th><th>Proveedor</th><th>Último Reabastecimiento</th><th></th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
     </div>
 
     <!-- ANALYTICS -->
     <div class="page" id="p-analytics">
-      <h2 style="margin:0 0 4px;letter-spacing:-.03em">Analytics ejecutivo 📊</h2>
-      <p class="muted" style="margin:0 0 18px">GMROI · Fill Rate · Sell-Through · OTIF · Nivel de servicio</p>
-      <div class="kpi-grid" id="ana-kpis"></div>
-      <div class="cols2"><div class="panel"><h3>Ventas vs forecast (180d)</h3><div class="chart-box"><canvas id="ch-ana1"></canvas></div></div>
-      <div class="panel"><h3>Mix ABC por valor</h3><div class="chart-box"><canvas id="ch-ana2"></canvas></div></div></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+        <h2 style="margin:0">Panel de Análisis de Inventario</h2>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13.5px" class="muted">Período:
+          <select id="ana-period" class="chip" style="padding:8px 12px" onchange="drawAnalytics(true)"><option value="30">Últimos 30 días</option><option value="90" selected>Últimos 90 días</option><option value="180">Últimos 180 días</option></select>
+          <span>Ubicación:</span><select class="chip" style="padding:8px 12px" title="Consolidado de las 3 sedes (branch_stock en roadmap)"><option>Consolidado · 3 sedes</option></select>
+          <button class="btn btn-b btn-s" onclick="drawAnalytics(true)">Actualizar</button></div>
+      </div>
+      <div class="ana-grid">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="kpi-card"><small>Capital Liberado</small><div class="big mono" id="ak-cap">—</div><canvas id="sp-cap"></canvas></div>
+          <div class="kpi-card"><small>Eficiencia de Compras</small><div class="big mono" id="ak-eff">—</div><canvas id="sp-eff"></canvas></div>
+          <div class="kpi-card"><small>Productos en Riesgo</small><div class="big mono" id="ak-risk">—</div><canvas id="sp-risk"></canvas></div>
+        </div>
+        <div class="panel"><h3>Predicción de Demanda vs Real <span class="muted" style="font-weight:400;font-size:13px">· agregado top-3 SKUs</span></h3>
+          <div class="chart-box tall"><canvas id="ch-ana1"></canvas></div></div>
+      </div>
+      <div class="ana-grid2">
+        <div class="panel"><h3>Compras por Categoría <span class="muted" style="font-weight:400;font-size:13px">· valorizado S/</span></h3>
+          <div class="chart-box"><canvas id="ch-cat"></canvas></div></div>
+        <div class="panel"><h3>Distribución de Categorías <span class="muted" style="font-weight:400;font-size:13px">· stock actual</span></h3>
+          <div class="chart-box"><canvas id="ch-ana2"></canvas></div></div>
+      </div>
+      <div class="panel" style="margin-top:14px"><h3>Días sin Rotación por Producto <span class="muted" style="font-weight:400;font-size:13px">· cobertura en días (calculada)</span></h3>
+        <div class="heat-legend"></div>
+        <div class="tscroll"><table class="heat" id="heat-table"></table></div></div>
     </div>
 
     <!-- INTEGRATIONS -->
@@ -363,6 +383,21 @@
   <div class="frow"><div class="field"><label>Entrega esperada</label><input id="ocm-eta" value="5 días hábiles"></div>
   <div class="field"><label>Total estimado</label><input id="ocm-total" readonly></div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn btn-g" onclick="closeModal('oc-modal')">Cancelar</button><button class="btn btn-b" onclick="ocSave()">Guardar OC →</button></div>
+</div></div>
+
+<!-- SKU modal -->
+<div class="modal-bg" id="sku-modal"><div class="modal">
+  <h3>Nuevo producto</h3>
+  <p class="muted" style="font-size:13.5px;margin:0 0 6px">Entra al maestro y al motor de inmediato (venta diaria = base del forecast).</p>
+  <div class="field"><label>Nombre del producto</label><input id="sku-name" placeholder="Ej. Aceite Cocinero 900ml"></div>
+  <div class="frow"><div class="field"><label>Categoría</label><select id="sku-cat"></select></div>
+  <div class="field"><label>Proveedor</label><select id="sku-sup"></select></div></div>
+  <div class="frow"><div class="field"><label>Costo (S/)</label><input id="sku-cost" type="number" min="0" value="10"></div>
+  <div class="field"><label>Precio (S/)</label><input id="sku-price" type="number" min="0" value="13"></div></div>
+  <div class="frow"><div class="field"><label>Stock actual</label><input id="sku-stock" type="number" min="0" value="100"></div>
+  <div class="field"><label>Stock mínimo</label><input id="sku-min" type="number" min="0" value="50"></div></div>
+  <div class="field"><label>Venta diaria promedio (u/día)</label><input id="sku-daily" type="number" min="1" value="20"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn btn-g" onclick="closeModal('sku-modal')">Cancelar</button><button class="btn btn-b" onclick="skuSave()">Crear producto →</button></div>
 </div></div>
 
 <!-- Demo modal -->
